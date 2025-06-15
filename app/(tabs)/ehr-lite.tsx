@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
-import { ThemeContext } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useThemeColor } from '../../hooks/useThemeColor';
 
 interface HealthDocument {
@@ -43,27 +43,28 @@ interface HealthSummary {
 
 export default function EHRLiteScreen() {
   const insets = useSafeAreaInsets();
-  const { theme } = useContext(ThemeContext);
+  const { theme } = useTheme(); // Use the proper useTheme hook
 
-  const backgroundColor = useThemeColor({}, 'background');
-  const primaryColor = useThemeColor({}, 'primary');
-  const primaryDarkColor = useThemeColor({}, 'primaryDark');
-  const textColor = useThemeColor({}, 'text');
-  const textSecondaryColor = useThemeColor({}, 'textSecondary');
-  const textLightColor = useThemeColor({}, 'textLight');
-  const cardBackgroundColor = useThemeColor({}, 'card');
-  const borderColor = useThemeColor({}, 'border');
-  const whiteColor = useThemeColor({}, 'buttonText'); // Assuming buttonText is white or a suitable contrast
-  const errorColor = useThemeColor({}, 'error');
-  const drLynxPrimaryColor = useThemeColor('drLynx', 'primary');
-  const drLynxBackgroundColor = useThemeColor('drLynx', 'background');
-  const drLynxTextColor = useThemeColor('drLynx', 'text');
-  const medicalHealthColor = useThemeColor('medical', 'health');
-  const medicalInfoColor = useThemeColor('medical', 'info');
-  const medicalMedicineColor = useThemeColor('medical', 'medicine');
-  const medicalSuccessColor = useThemeColor('medical', 'success');
-  const medicalWarningColor = useThemeColor('medical', 'warning');
-  const primaryVeryLight = useThemeColor({}, 'primaryVeryLight');
+  const backgroundColor = useThemeColor('background');
+  const primaryColor = useThemeColor('primary');
+  const primaryDarkColor = useThemeColor('primaryDark');
+  const textColor = useThemeColor('textPrimary');
+  const textSecondaryColor = useThemeColor('textSecondary');
+  const textLightColor = useThemeColor('textTertiary'); // Changed to available color
+  const cardBackgroundColor = theme.colors.card.background;
+  const borderColor = useThemeColor('border');
+  const whiteColor = useThemeColor('white');
+  const errorColor = useThemeColor('error');
+  // Simplified color usage - using theme directly for complex cases
+  const medicalHealthColor = theme.colors.healthGreen;
+  const medicalInfoColor = theme.colors.info;
+  const medicalMedicineColor = theme.colors.primary;
+  const medicalSuccessColor = theme.colors.success;
+  const medicalWarningColor = theme.colors.warning;
+  const primaryVeryLight = theme.colors.accentLight;
+  const drLynxPrimaryColor = theme.colors.primary;
+  const drLynxBackgroundColor = theme.colors.surface;
+  const drLynxTextColor = theme.colors.textPrimary;
 
 
   const documentTypes = [
@@ -162,8 +163,8 @@ export default function EHRLiteScreen() {
       title: 'Processing Document...',
       type: 'other',
       uploadDate: new Date().toISOString().split('T')[0],
-      fileName: file.name || (file as ImagePicker.ImagePickerAsset).fileName || 'document.file',
-      fileSize: file.size ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
+      fileName: ('name' in file ? file.name : 'fileName' in file ? file.fileName : 'document.file') || 'document.file',
+      fileSize: ('size' in file && file.size) ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : 'Unknown',
       tags: [],
       isProcessing: true,
       uri: file.uri,

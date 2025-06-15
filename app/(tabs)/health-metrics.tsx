@@ -245,6 +245,41 @@ export default function HealthMetricsScreen() {
     );
   };
 
+  const renderHealthMetrics = () => {
+    if (healthMetrics.length === 0) return null;
+
+    return (
+      <View style={styles.historyContainer}>
+        <Text style={styles.historyTitle}>Other Health Metrics</Text>
+        {healthMetrics.slice(0, 10).map((metric) => (
+          <View key={metric.id} style={styles.historyItem}>
+            <View style={styles.historyInfo}>
+              <Text style={styles.historyBMI}>{metric.value}</Text>
+              <Text style={styles.historyCategory}>
+                {metric.type === 'bloodPressure' ? 'Blood Pressure' : 
+                 metric.type === 'bloodSugar' ? 'Blood Sugar' : 'Heart Rate'}
+              </Text>
+              <Text style={styles.historyDate}>
+                {metric.date.toLocaleDateString()}
+              </Text>
+              {metric.notes && (
+                <Text style={styles.historyDate}>{metric.notes}</Text>
+              )}
+            </View>
+            <View style={[
+              styles.historyIndicator,
+              { backgroundColor: 
+                metric.type === 'bloodPressure' ? theme.colors.healthRed :
+                metric.type === 'bloodSugar' ? theme.colors.healthYellow :
+                theme.colors.healthBlue
+              }
+            ]} />
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar 
@@ -365,6 +400,9 @@ export default function HealthMetricsScreen() {
 
         {/* BMI History */}
         {renderBMIHistory()}
+
+        {/* Health Metrics */}
+        {renderHealthMetrics()}
 
         <View style={styles.bottomPadding} />
       </ScrollView>

@@ -50,7 +50,7 @@ export default function ThemedButton({
         return {
           ...baseStyle,
           backgroundColor: disabled ? theme.colors.textTertiary : theme.colors.primary,
-          shadowColor: theme.colors.shadow.colored,
+          shadowColor: theme.colors.shadow.medium,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 8,

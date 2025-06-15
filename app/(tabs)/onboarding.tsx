@@ -508,7 +508,7 @@ const styles = (theme: Theme) => StyleSheet.create({ // Changed: styles is now a
     borderColor: theme.colors.border,
   },
   conditionChipSelected: {
-    backgroundColor: theme.colors.primaryMuted,
+    backgroundColor: theme.colors.primaryLight,
     borderColor: theme.colors.primary,
   },
   conditionText: {
@@ -619,7 +619,7 @@ const styles = (theme: Theme) => StyleSheet.create({ // Changed: styles is now a
     backgroundColor: theme.colors.primary,
   },
   navButtonDisabled: {
-    backgroundColor: theme.colors.buttonSecondary, // Or a more distinct disabled color
+    backgroundColor: theme.colors.buttonSecondaryBackground, // Or a more distinct disabled color
     opacity: 0.6,
   },
   navButtonText: {

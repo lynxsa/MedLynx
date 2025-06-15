@@ -696,7 +696,7 @@ const createStyles = (theme: Theme): CalendarStyles => StyleSheet.create<Calenda
     backgroundColor: theme.colors.card.background, // Use theme.colors.card.background
   },
   todayCell: {
-    backgroundColor: theme.colors.primaryMuted,
+    backgroundColor: theme.colors.primaryLight,
     borderColor: theme.colors.primary,
   },
   otherMonthCell: {
@@ -931,7 +931,7 @@ const createStyles = (theme: Theme): CalendarStyles => StyleSheet.create<Calenda
     flexWrap: 'wrap',
   },
   timeChip: {
-    backgroundColor: theme.colors.primaryMuted,
+    backgroundColor: theme.colors.primaryLight,
     borderRadius: 12,
     paddingVertical: 4,
     paddingHorizontal: 8,
@@ -1011,7 +1011,7 @@ const createStyles = (theme: Theme): CalendarStyles => StyleSheet.create<Calenda
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: theme.colors.buttonSecondary, // Use a secondary button color
+    backgroundColor: theme.colors.buttonSecondaryBackground, // Use a secondary button color
     marginRight: 10, // Add space if using space-between for modalButtons isn't enough
   },
   saveButton: {

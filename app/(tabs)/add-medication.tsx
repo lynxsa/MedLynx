@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { MedicationStorage } from '../../utils/MedicationStorage';
-import { NotificationService } from '../../utils/NotificationService';
 import { EnhancedNotificationService, MedicationReminder } from '../../utils/EnhancedNotificationService';
 import { MEDICATION_COLORS } from '../../types';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -134,10 +133,6 @@ export default function AddMedicationScreen() {
 
         // Schedule enhanced notifications
         await EnhancedNotificationService.scheduleMedicationReminder(reminder);
-        
-        // Also schedule with the old service for backup
-        await NotificationService.scheduleMedicationReminders(medication);
-        await NotificationService.scheduleRefillReminder(medication);
         
         Alert.alert(
           '🎉 Success!', 

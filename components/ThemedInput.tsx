@@ -59,7 +59,7 @@ export default function ThemedInput({
 
     const focusedStyle = isFocused ? {
       borderColor: theme.colors.primary,
-      shadowColor: theme.colors.shadow.colored,
+      shadowColor: theme.colors.shadow.medium,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,

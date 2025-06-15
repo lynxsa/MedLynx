@@ -16,11 +16,11 @@ export function ThemedView({
   ...otherProps 
 }: ThemedViewProps) {
   const { theme } = useTheme();
-  const fallbackBackgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+  const defaultBackgroundColor = useThemeColor('background');
   
   const getBackgroundColor = () => {
     if (lightColor || darkColor) {
-      return fallbackBackgroundColor;
+      return lightColor || darkColor;
     }
     
     switch (type) {
@@ -31,7 +31,7 @@ export function ThemedView({
       case 'elevated':
         return theme.colors.surfaceElevated;
       default:
-        return theme.colors.background;
+        return defaultBackgroundColor;
     }
   };
 

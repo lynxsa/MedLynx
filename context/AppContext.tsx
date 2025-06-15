@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { MedicationStorage } from '../utils/MedicationStorage';
-import { NotificationService } from '../utils/NotificationService';
+import { EnhancedNotificationService } from '../utils/EnhancedNotificationService';
 import { Medication, DailyProgress } from '../types';
 
 interface AppState {
@@ -145,8 +145,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Schedule notifications for the new medication
         const medications = await MedicationStorage.getAllMedications();
         const newMedication = medications[medications.length - 1]; // Get the latest added
-        await NotificationService.scheduleMedicationReminders(newMedication);
-        await NotificationService.scheduleRefillReminder(newMedication);
+        // Create medication reminder for the enhanced service
+        const reminder = {
+          id: newMedication.id,
+          medicationName: newMedication.name,
+          dosage: newMedication.dosage,
+          frequency: newMedication.frequency,
+          times: newMedication.time,
+          startDate: new Date(),
+          instructions: `Take ${newMedication.dosage}`,
+          isActive: true,
+        };
+        await EnhancedNotificationService.scheduleMedicationReminder(reminder);
       }
       return success !== null; // Convert to boolean
     } catch (error) {
@@ -164,11 +174,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         
         // Reschedule notifications if times changed
         if (updates.time) {
-          await NotificationService.cancelAllMedicationNotifications(id);
+          await EnhancedNotificationService.cancelMedicationReminder(id);
           const medication = state.medications.find(med => med.id === id);
           if (medication) {
             const updatedMed = { ...medication, ...updates };
-            await NotificationService.scheduleMedicationReminders(updatedMed);
+            const reminder = {
+              id: updatedMed.id,
+              medicationName: updatedMed.name,
+              dosage: updatedMed.dosage,
+              frequency: updatedMed.frequency,
+              times: updatedMed.time,
+              startDate: new Date(),
+              instructions: `Take ${updatedMed.dosage}`,
+              isActive: true,
+            };
+            await EnhancedNotificationService.scheduleMedicationReminder(reminder);
           }
         }
       }
@@ -185,7 +205,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const success = await MedicationStorage.deleteMedication(id);
       if (success) {
         dispatch({ type: 'REMOVE_MEDICATION', payload: id });
-        await NotificationService.cancelAllMedicationNotifications(id);
+        await EnhancedNotificationService.cancelMedicationReminder(id);
       }
       return success;
     } catch (error) {
@@ -204,10 +224,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Send confirmation notification
         const medication = state.medications.find(med => med.id === id);
         if (medication) {
-          await NotificationService.sendImmediateNotification(
-            'Medication Taken',
-            `You've successfully taken your ${medication.name}`
-          );
+          // TODO: Implement immediate notification with EnhancedNotificationService
+          console.log(`Medication taken: ${medication.name}`);
         }
       }
       return success;
@@ -232,29 +250,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loadMedications();
   }, [loadMedications]);
 
-  // Setup notification listeners
+  // Setup notification action handlers
   useEffect(() => {
-    const responseListener = NotificationService.addNotificationResponseListener(
-      async (response) => {
-        const medicationId = response.notification.request.content.data?.medicationId;
-        if (medicationId && typeof medicationId === 'string') {
-          // Navigate to medication detail or mark as taken
-          await markAsTaken(medicationId);
-        }
-      }
-    );
-
-    const receivedListener = NotificationService.addNotificationReceivedListener(
-      (notification) => {
-        console.log('Notification received:', notification);
-      }
-    );
-
-    return () => {
-      responseListener.remove();
-      receivedListener.remove();
-    };
-  }, [markAsTaken]);
+    // Initialize the enhanced notification service handlers
+    EnhancedNotificationService.setupNotificationActionHandlers();
+  }, []);
 
   const contextValue: AppContextType = {
     ...state,

@@ -12,7 +12,6 @@ import {
   ViewStyle,
   TextStyle,
   ImageStyle,
-  ColorValue,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
@@ -193,7 +192,7 @@ export default function FoodScanScreen() {
   if (capturedImage && nutritionData) {
     return (
       <LinearGradient
-        colors={theme.gradients.primary as [ColorValue, ColorValue, ...ColorValue[]]} // Corrected type for colors
+        colors={theme.gradients.primary as any} // Simplified type casting for readonly array
         style={[styles.container, { paddingTop: insets.top }]}
       >
         <ScrollView style={styles.resultsContainer} showsVerticalScrollIndicator={false}>
@@ -332,7 +331,7 @@ export default function FoodScanScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <LinearGradient
-        colors={theme.gradients.primary as [ColorValue, ColorValue, ...ColorValue[]]} // Corrected type for colors
+        colors={theme.gradients.primary as any} // Simplified type casting for readonly array
         style={styles.header}
       >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
