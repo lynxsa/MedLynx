@@ -8,7 +8,20 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "lint:fix": "expo lint --fix",
+    "type-check": "npx tsc --noEmit",
+    "test": "npm run type-check && npm run lint",
+    "build:ios": "npx expo build:ios",
+    "build:android": "npx expo build:android",
+    "build:web": "npx expo build:web",
+    "run:ios": "npx expo run:ios",
+    "run:android": "npx expo run:android",
+    "prebuild": "npx expo prebuild",
+    "audit:security": "npm audit --audit-level moderate",
+    "update:deps": "npm outdated",
+    "clean": "npx expo install --fix",
+    "dev": "npm run type-check && npm start"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

@@ -16,7 +16,7 @@ export default function NotFoundScreen() {
           <Ionicons name="alert-circle-outline" size={80} color={theme.colors.white} />
           <Text style={[styles.title, { color: theme.colors.white }]}>Oops! Page Not Found</Text>
           <Text style={[styles.subtitle, { color: theme.colors.white }]}>The screen you&apos;re looking for doesn&apos;t exist.</Text>
-          <Link href="/(tabs)/home" style={styles.link}>
+          <Link href="/(tabs)/enhanced-home" style={styles.link}>
             <View style={[styles.linkButton, { backgroundColor: theme.colors.white }]}>
               <Ionicons name="home-outline" size={20} color={theme.colors.primary} />
               <Text style={[styles.linkText, { color: theme.colors.primary }]}>Go to Home</Text>
