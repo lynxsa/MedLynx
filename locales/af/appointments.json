@@ -1,0 +1,11 @@
+{
+  "titles": {
+    "appointments": "Afsprake",
+    "newAppointment": "Nuwe Afspraak"
+  },
+  "fields": {
+    "doctorName": "Dokter Naam",
+    "appointmentDate": "Afspraak Datum",
+    "appointmentTime": "Afspraak Tyd"
+  }
+}

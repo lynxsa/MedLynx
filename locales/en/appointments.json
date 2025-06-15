@@ -1,0 +1,63 @@
+{
+  "titles": {
+    "appointments": "Appointments",
+    "newAppointment": "New Appointment",
+    "editAppointment": "Edit Appointment",
+    "upcomingAppointments": "Upcoming Appointments",
+    "pastAppointments": "Past Appointments",
+    "appointmentDetails": "Appointment Details"
+  },
+  "fields": {
+    "doctorName": "Doctor Name",
+    "clinicName": "Clinic/Practice Name",
+    "appointmentDate": "Appointment Date",
+    "appointmentTime": "Appointment Time",
+    "reasonForVisit": "Reason for Visit",
+    "additionalNotes": "Additional Notes",
+    "appointmentType": "Appointment Type",
+    "setReminder": "Set Reminder",
+    "status": "Status"
+  },
+  "types": {
+    "general": "General",
+    "checkup": "Check-up",
+    "followup": "Follow-up",
+    "emergency": "Emergency",
+    "consultation": "Consultation",
+    "screening": "Screening",
+    "vaccination": "Vaccination"
+  },
+  "status": {
+    "scheduled": "Scheduled",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "rescheduled": "Rescheduled",
+    "inProgress": "In Progress"
+  },
+  "actions": {
+    "addAppointment": "Add Appointment",
+    "editAppointment": "Edit Appointment",
+    "deleteAppointment": "Delete Appointment",
+    "rescheduleAppointment": "Reschedule Appointment",
+    "cancelAppointment": "Cancel Appointment",
+    "markCompleted": "Mark as Completed"
+  },
+  "messages": {
+    "noAppointments": "No appointments for this date",
+    "appointmentSaved": "Appointment saved successfully",
+    "appointmentDeleted": "Appointment deleted successfully",
+    "reminderSet": "Reminder set for this appointment",
+    "fillRequiredFields": "Please fill in all required fields",
+    "deleteConfirmation": "Are you sure you want to delete this appointment?",
+    "selectTime": "Select time",
+    "selectDate": "Select date"
+  },
+  "reminders": {
+    "reminderSet": "Reminder Set",
+    "1dayBefore": "1 day before",
+    "1hourBefore": "1 hour before",
+    "30minBefore": "30 minutes before",
+    "reminderTitle": "Appointment Reminder",
+    "reminderBody": "You have an appointment with {{doctorName}} at {{time}}"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "app": {
+    "name": "Health Hub SA",
+    "welcome": "Siyakwamukela ku-Health Hub SA",
+    "loading": "Kuyalayishwa...",
+    "cancel": "Khansela",
+    "save": "Londoloza",
+    "back": "Emuva"
+  },
+  "navigation": {
+    "home": "Ekhaya",
+    "appointments": "Izikhathi",
+    "medications": "Imithi Yami",
+    "drLynx": "UDokotela LYNX"
+  }
+}

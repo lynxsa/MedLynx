@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "Health Hub SA",
+    "welcome": "Welcome to Health Hub SA",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Try Again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "done": "Done",
+    "close": "Close",
+    "confirm": "Confirm"
+  },
+  "navigation": {
+    "home": "Home",
+    "appointments": "Appointments",
+    "medications": "My Meds",
+    "drLynx": "Dr. LYNX",
+    "directory": "Directory",
+    "records": "My Records",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "language": {
+    "select": "Select Language",
+    "current": "Current Language",
+    "english": "English",
+    "afrikaans": "Afrikaans",
+    "zulu": "Zulu",
+    "xhosa": "Xhosa",
+    "northernSotho": "Northern Sotho/Pedi",
+    "southernSotho": "Southern Sotho"
+  },
+  "time": {
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "nextWeek": "Next Week"
+  },
+  "forms": {
+    "required": "Required",
+    "optional": "Optional",
+    "invalid": "Invalid",
+    "pleaseEnter": "Please enter",
+    "pleaseSelect": "Please select"
+  }
+}

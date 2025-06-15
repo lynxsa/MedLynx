@@ -1,0 +1,61 @@
+{
+  "general": {
+    "health": "Maphelo",
+    "medical": "Tša Bongaka",
+    "healthcare": "Tlhokomelo ya Maphelo",
+    "wellness": "Maphelo a Mabotse",
+    "symptoms": "Matshwao",
+    "diagnosis": "Tlhatlhobo",
+    "treatment": "Kalafo",
+    "medication": "Sehlare",
+    "medications": "Dihlare",
+    "prescription": "Taelo ya Ngaka",
+    "doctor": "Ngaka",
+    "clinic": "Kliniki",
+    "hospital": "Sepetlele",
+    "pharmacy": "Kemese",
+    "emergency": "Tšhoganetšo"
+  },
+  "conditions": {
+    "diabetes": "Bolwetši bja Tswekere",
+    "hypertension": "Kgatelelo ya Madi",
+    "asthma": "Sefuba",
+    "allergies": "Dilo tšeo Di sa Dumeleng",
+    "chronicPain": "Bohloko bjo bo Salago",
+    "heartDisease": "Bolwetši bja Pelo",
+    "arthritis": "Makhukhu",
+    "depression": "Ditemošo tša Tlase",
+    "anxiety": "Tshoganetšo"
+  },
+  "bodyParts": {
+    "head": "Hlogo",
+    "chest": "Sefuba",
+    "abdomen": "Mala",
+    "back": "Morago",
+    "arms": "Matsogo",
+    "legs": "Maoto",
+    "heart": "Pelo",
+    "lungs": "Mahubedu",
+    "stomach": "Mala"
+  },
+  "drLynx": {
+    "greeting": "Thobela! Ke Ngaka LYNX, morutiši wa gago wa maphelo.",
+    "howCanIHelp": "Nka go thuša bjang lehono?",
+    "analyzing": "Ke sekaseka matshwao a gago...",
+    "recommendation": "Go ya ka matshwao a gago, mona ke seo ke se šišinyago:",
+    "seeDoctor": "Hle ya go bona ngaka ya maphelo",
+    "emergency": "Se se bonala se tšhogane. Hle nyaka thušo ka pela.",
+    "disclaimer": "Ye ke kaelo ye e tšweletšwago ke AI gomme ga e ka se tšee legato la kaelo ya ngaka ya maphelo."
+  },
+  "bmi": {
+    "calculator": "Sekgetši sa BMI",
+    "height": "Bogodimo",
+    "weight": "Boima",
+    "result": "BMI ya gago ke",
+    "underweight": "Boima bjo bo Fokotšegileng",
+    "normal": "Boima bjo bo Tlwaelegileng",
+    "overweight": "Boima bjo bo Oketšegileng",
+    "obese": "Boima bjo bo Feteletšeng",
+    "category": "Sehlopha"
+  }
+}

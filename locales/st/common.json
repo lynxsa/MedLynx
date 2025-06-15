@@ -1,0 +1,16 @@
+{
+  "app": {
+    "name": "Health Hub SA",
+    "welcome": "Rea u amohela ho Health Hub SA",
+    "loading": "E a jarolla...",
+    "cancel": "Hlakola",
+    "save": "Boloka",
+    "back": "Morao"
+  },
+  "navigation": {
+    "home": "Hae",
+    "appointments": "Dinako",
+    "medications": "Dihlare tsa ka",
+    "drLynx": "Ngaka LYNX"
+  }
+}

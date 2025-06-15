@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "Health Hub SA",
+    "welcome": "Thiiši go Health Hub SA",
+    "loading": "E a lahlwa...",
+    "error": "Go bile le phošo",
+    "retry": "Leka Gape",
+    "cancel": "Khansela",
+    "save": "Boloka",
+    "delete": "Phešula",
+    "edit": "Lokiša",
+    "add": "Tšweletša",
+    "back": "Morago",
+    "next": "Latelago",
+    "previous": "Pele",
+    "done": "Fedile",
+    "close": "Tswalela",
+    "confirm": "Tiišetša"
+  },
+  "navigation": {
+    "home": "Gae",
+    "appointments": "Ditebelano",
+    "medications": "Dihlare Tšaka",
+    "drLynx": "Ngaka LYNX",
+    "directory": "Lenaganwa",
+    "records": "Dikwalo Tšaka",
+    "profile": "Profaele",
+    "settings": "Dipeakanyo"
+  },
+  "language": {
+    "select": "Kgetha Polelo",
+    "current": "Polelo ya Bjale",
+    "english": "Seisemane",
+    "afrikaans": "Seafrikanse",
+    "zulu": "Sesulu",
+    "xhosa": "Sexosa",
+    "northernSotho": "Sesotho sa Leboa/Sepedi",
+    "southernSotho": "Sesotho sa Borwa"
+  },
+  "time": {
+    "morning": "Mesong",
+    "afternoon": "Mantšiboa",
+    "evening": "Mantšiboa",
+    "today": "Lehono",
+    "tomorrow": "Gosasa",
+    "yesterday": "Maabane",
+    "thisWeek": "Beke ye",
+    "nextWeek": "Beke e latelago"
+  },
+  "forms": {
+    "required": "E a nyakega",
+    "optional": "Ga se ya nyakega",
+    "invalid": "Ga e nepahe",
+    "pleaseEnter": "Hle tsenya",
+    "pleaseSelect": "Hle kgetha"
+  }
+}

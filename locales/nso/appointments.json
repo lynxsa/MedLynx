@@ -1,0 +1,63 @@
+{
+  "titles": {
+    "appointments": "Ditebelano",
+    "newAppointment": "Tebelano e Mpsha",
+    "editAppointment": "Lokiša Tebelano",
+    "upcomingAppointments": "Ditebelano tšeo Di Tlago",
+    "pastAppointments": "Ditebelano tša Pele",
+    "appointmentDetails": "Dintlha tša Tebelano"
+  },
+  "fields": {
+    "doctorName": "Leina la Ngaka",
+    "clinicName": "Leina la Kliniki/Sebaka sa Ngaka",
+    "appointmentDate": "Letšatši la Tebelano",
+    "appointmentTime": "Nako ya Tebelano",
+    "reasonForVisit": "Lebaka la go Etela",
+    "additionalNotes": "Dintlha tše Dingwe",
+    "appointmentType": "Mohuta wa Tebelano",
+    "setReminder": "Beakanya Segopotšo",
+    "status": "Maemo"
+  },
+  "types": {
+    "general": "Kakaretšo",
+    "checkup": "Tlhatlhobo",
+    "followup": "Latela",
+    "emergency": "Tšhoganetšo",
+    "consultation": "Puledišano",
+    "screening": "Sekaseko",
+    "vaccination": "Ente"
+  },
+  "status": {
+    "scheduled": "E Beakantšwe",
+    "completed": "E Phethilwe",
+    "cancelled": "E Khanseditšwe",
+    "rescheduled": "E Beakantšwe Gape",
+    "inProgress": "E Šomišwa"
+  },
+  "actions": {
+    "addAppointment": "Tšweletša Tebelano",
+    "editAppointment": "Lokiša Tebelano",
+    "deleteAppointment": "Phešula Tebelano",
+    "rescheduleAppointment": "Beakanya Tebelano Gape",
+    "cancelAppointment": "Khansela Tebelano",
+    "markCompleted": "Tšhwaya e le e Phethilwe"
+  },
+  "messages": {
+    "noAppointments": "Ga go na ditebelano letšatšing le",
+    "appointmentSaved": "Tebelano e bolokeditšwe ka katlego",
+    "appointmentDeleted": "Tebelano e phešuditšwe ka katlego",
+    "reminderSet": "Segopotšo se beakantšwe sa tebelano ye",
+    "fillRequiredFields": "Hle tlatša mafelo ao a nyakegago",
+    "deleteConfirmation": "Na o tiišegile gore o nyaka go phešula tebelano ye?",
+    "selectTime": "Kgetha nako",
+    "selectDate": "Kgetha letšatši"
+  },
+  "reminders": {
+    "reminderSet": "Segopotšo se Beakantšwe",
+    "1dayBefore": "Letšatši le tee pele",
+    "1hourBefore": "Iri e tee pele",
+    "30minBefore": "Metsotso e 30 pele",
+    "reminderTitle": "Segopotšo sa Tebelano",
+    "reminderBody": "O na le tebelano le {{doctorName}} ka {{time}}"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "expo": {
+    "name": "MedLynx",
+    "slug": "medlynx",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "medlynx",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "description": "Your South African Health Companion - AI-powered medication management and health tracking.",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#8B5CF6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.medlynx.app",
+      "backgroundColor": "#8B5CF6",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "MedLynx uses the microphone for voice commands with Dr. LYNX AI assistant.",
+        "NSLocationWhenInUseUsageDescription": "MedLynx uses location to find nearby health facilities and pharmacies.",
+        "NSCameraUsageDescription": "MedLynx uses the camera to capture prescription documents and health records.",
+        "NSPhotoLibraryUsageDescription": "MedLynx accesses your photo library to upload health documents and prescriptions."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#8B5CF6"
+      },
+      "package": "com.medlynx.app",
+      "permissions": [
+        "NOTIFICATIONS",
+        "WAKE_LOCK",
+        "VIBRATE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "RECORD_AUDIO",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#8B5CF6"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#8B5CF6",
+          "defaultChannel": "medication-reminders"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow MedLynx to use Face ID for secure access to your medications."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

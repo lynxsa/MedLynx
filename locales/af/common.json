@@ -1,0 +1,40 @@
+{
+  "app": {
+    "name": "Health Hub SA",
+    "welcome": "Welkom by Health Hub SA",
+    "loading": "Laai...",
+    "error": "Fout",
+    "retry": "Probeer Weer",
+    "cancel": "Kanselleer",
+    "save": "Stoor",
+    "delete": "Verwyder",
+    "edit": "Wysig",
+    "add": "Voeg By",
+    "back": "Terug",
+    "next": "Volgende",
+    "previous": "Vorige",
+    "done": "Klaar",
+    "close": "Sluit",
+    "confirm": "Bevestig"
+  },
+  "navigation": {
+    "home": "Tuis",
+    "appointments": "Afsprake",
+    "medications": "My Medisyne",
+    "drLynx": "Dr. LYNX",
+    "directory": "Gids",
+    "records": "My Rekords",
+    "profile": "Profiel",
+    "settings": "Instellings"
+  },
+  "language": {
+    "select": "Kies Taal",
+    "current": "Huidige Taal",
+    "english": "Engels",
+    "afrikaans": "Afrikaans",
+    "zulu": "Zulu",
+    "xhosa": "Xhosa",
+    "northernSotho": "Noord-Sotho/Pedi",
+    "southernSotho": "Suid-Sotho"
+  }
+}

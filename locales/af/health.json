@@ -1,0 +1,10 @@
+{
+  "general": {
+    "health": "Gesondheid",
+    "medical": "Mediese",
+    "doctor": "Dokter",
+    "clinic": "Kliniek",
+    "hospital": "Hospitaal",
+    "pharmacy": "Apteek"
+  }
+}

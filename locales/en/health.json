@@ -1,0 +1,61 @@
+{
+  "general": {
+    "health": "Health",
+    "medical": "Medical",
+    "healthcare": "Healthcare",
+    "wellness": "Wellness",
+    "symptoms": "Symptoms",
+    "diagnosis": "Diagnosis",
+    "treatment": "Treatment",
+    "medication": "Medication",
+    "medications": "Medications",
+    "prescription": "Prescription",
+    "doctor": "Doctor",
+    "clinic": "Clinic",
+    "hospital": "Hospital",
+    "pharmacy": "Pharmacy",
+    "emergency": "Emergency"
+  },
+  "conditions": {
+    "diabetes": "Diabetes",
+    "hypertension": "High Blood Pressure",
+    "asthma": "Asthma",
+    "allergies": "Allergies",
+    "chronicPain": "Chronic Pain",
+    "heartDisease": "Heart Disease",
+    "arthritis": "Arthritis",
+    "depression": "Depression",
+    "anxiety": "Anxiety"
+  },
+  "bodyParts": {
+    "head": "Head",
+    "chest": "Chest",
+    "abdomen": "Abdomen",
+    "back": "Back",
+    "arms": "Arms",
+    "legs": "Legs",
+    "heart": "Heart",
+    "lungs": "Lungs",
+    "stomach": "Stomach"
+  },
+  "drLynx": {
+    "greeting": "Hello! I'm Dr. LYNX, your AI health companion.",
+    "howCanIHelp": "How can I help you today?",
+    "analyzing": "Analyzing your symptoms...",
+    "recommendation": "Based on your symptoms, here's what I recommend:",
+    "seeDoctor": "Please consult with a healthcare professional",
+    "emergency": "This seems urgent. Please seek immediate medical attention.",
+    "disclaimer": "This is AI-generated advice and should not replace professional medical consultation."
+  },
+  "bmi": {
+    "calculator": "BMI Calculator",
+    "height": "Height",
+    "weight": "Weight",
+    "result": "Your BMI is",
+    "underweight": "Underweight",
+    "normal": "Normal Weight",
+    "overweight": "Overweight",
+    "obese": "Obese",
+    "category": "Category"
+  }
+}

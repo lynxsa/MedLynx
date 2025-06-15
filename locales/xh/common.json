@@ -1,0 +1,16 @@
+{
+  "app": {
+    "name": "Health Hub SA",
+    "welcome": "Wamkelekile kwi-Health Hub SA",
+    "loading": "Kuyafakwa...",
+    "cancel": "Rhoxisa",
+    "save": "Gcina",
+    "back": "Umva"
+  },
+  "navigation": {
+    "home": "Ekhaya",
+    "appointments": "Amadinga",
+    "medications": "Amayeza am",
+    "drLynx": "UGqirha LYNX"
+  }
+}
