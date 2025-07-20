@@ -4,17 +4,17 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Modal,
-  RefreshControl,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TextStyle,
-  TouchableOpacity,
-  View,
-  ViewStyle
+    Modal,
+    RefreshControl,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TextStyle,
+    TouchableOpacity,
+    View,
+    ViewStyle
 } from 'react-native';
 import { StandardHeader } from '../../components/StandardHeader';
 import { Theme } from '../../constants/DynamicTheme';
@@ -124,11 +124,32 @@ interface CalendarStyles {
   eventIndicators: ViewStyle;
   eventDot: ViewStyle;
   
+  // Enhanced calendar day styles
+  hasEventsCell: ViewStyle;
+  dayContent: ViewStyle;
+  eventPreview: ViewStyle;
+  eventCountBadge: ViewStyle;
+  selectedEventBadge: ViewStyle;
+  eventCountText: TextStyle;
+  selectedEventCountText: TextStyle;
+  eventTypeIndicators: ViewStyle;
+  eventTypeIcon: ViewStyle;
+  appointmentIcon: ViewStyle;
+  medicationIcon: ViewStyle;
+  reminderIcon: ViewStyle;
+  selectedIcon: ViewStyle;
+  
   // Selected day section
   selectedDaySection: ViewStyle;
   selectedDayHeader: ViewStyle;
+  selectedDayInfo: ViewStyle;
   selectedDayTitle: TextStyle;
   selectedDayDate: TextStyle;
+  dayStats: ViewStyle;
+  statItem: ViewStyle;
+  statText: TextStyle;
+  dayActions: ViewStyle;
+  quickActionButton: ViewStyle;
   
   // Filter tabs
   filterTabs: ViewStyle;
@@ -137,6 +158,18 @@ interface CalendarStyles {
   filterTabIcon: TextStyle;
   filterTabText: TextStyle;
   activeFilterTabText: TextStyle;
+  
+  // Timeline styles
+  timelineContainer: ViewStyle;
+  timelineTitle: TextStyle;
+  timelineScroll: ViewStyle;
+  timeline: ViewStyle;
+  timelineItem: ViewStyle;
+  timelineTime: ViewStyle;
+  timelineTimeText: TextStyle;
+  timelineEvent: ViewStyle;
+  timelineEventTitle: TextStyle;
+  timelineConnector: ViewStyle;
   
   // Events
   eventsContainer: ViewStyle;
@@ -744,6 +777,7 @@ export default function ModernCalendarScreen() {
   const renderCalendarDay = (day: CalendarDay, index: number) => {
     const isSelected = day.date.toDateString() === selectedDate.toDateString();
     const hasEvents = day.appointments.length > 0 || day.medications.length > 0 || day.reminders.length > 0;
+    const totalEvents = day.appointments.length + day.medications.length + day.reminders.length;
     
     return (
       <TouchableOpacity
@@ -752,25 +786,63 @@ export default function ModernCalendarScreen() {
           styles.dayCell,
           day.isToday && styles.todayCell,
           isSelected && styles.selectedCell,
-          !day.isCurrentMonth && styles.otherMonthCell
+          !day.isCurrentMonth && styles.otherMonthCell,
+          hasEvents && day.isCurrentMonth && styles.hasEventsCell
         ]}
         onPress={() => setSelectedDate(day.date)}
       >
-        <Text style={[
-          styles.dayText,
-          day.isToday && styles.todayText,
-          isSelected && styles.selectedDayText,
-          !day.isCurrentMonth && styles.otherMonthText
-        ]}>
-          {day.date.getDate()}
-        </Text>
-        {hasEvents && day.isCurrentMonth && (
-          <View style={styles.eventIndicators}>
-            {day.appointments.length > 0 && <View style={[styles.eventDot, { backgroundColor: theme.colors.primary }]} />}
-            {day.medications.length > 0 && <View style={[styles.eventDot, { backgroundColor: '#FF6B6B' }]} />}
-            {day.reminders.length > 0 && <View style={[styles.eventDot, { backgroundColor: '#4ECDC4' }]} />}
-          </View>
-        )}
+        <View style={styles.dayContent}>
+          <Text style={[
+            styles.dayText,
+            day.isToday && styles.todayText,
+            isSelected && styles.selectedDayText,
+            !day.isCurrentMonth && styles.otherMonthText
+          ]}>
+            {day.date.getDate()}
+          </Text>
+          
+          {/* Enhanced Event Display */}
+          {hasEvents && day.isCurrentMonth && (
+            <View style={styles.eventPreview}>
+              {/* Event Count Badge */}
+              {totalEvents > 0 && (
+                <View style={[styles.eventCountBadge, isSelected && styles.selectedEventBadge]}>
+                  <Text style={[styles.eventCountText, isSelected && styles.selectedEventCountText]}>
+                    {totalEvents}
+                  </Text>
+                </View>
+              )}
+              
+              {/* Quick Event Type Indicators */}
+              <View style={styles.eventTypeIndicators}>
+                {day.appointments.length > 0 && (
+                  <View style={[styles.eventTypeIcon, styles.appointmentIcon, isSelected && styles.selectedIcon]}>
+                    <Ionicons name="medical" size={8} color={isSelected ? "white" : theme.colors.primary} />
+                  </View>
+                )}
+                {day.medications.length > 0 && (
+                  <View style={[styles.eventTypeIcon, styles.medicationIcon, isSelected && styles.selectedIcon]}>
+                    <Ionicons name="medical-outline" size={8} color={isSelected ? "white" : "#FF6B6B"} />
+                  </View>
+                )}
+                {day.reminders.length > 0 && (
+                  <View style={[styles.eventTypeIcon, styles.reminderIcon, isSelected && styles.selectedIcon]}>
+                    <Ionicons name="alarm-outline" size={8} color={isSelected ? "white" : "#4ECDC4"} />
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
+          
+          {/* Traditional dot indicators as fallback */}
+          {hasEvents && day.isCurrentMonth && totalEvents === 0 && (
+            <View style={styles.eventIndicators}>
+              {day.appointments.length > 0 && <View style={[styles.eventDot, { backgroundColor: theme.colors.primary }]} />}
+              {day.medications.length > 0 && <View style={[styles.eventDot, { backgroundColor: '#FF6B6B' }]} />}
+              {day.reminders.length > 0 && <View style={[styles.eventDot, { backgroundColor: '#4ECDC4' }]} />}
+            </View>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
@@ -964,14 +1036,52 @@ export default function ModernCalendarScreen() {
           </View>
         </View>
 
-        {/* Selected Day Section */}
+        {/* Enhanced Selected Day Section */}
         <View style={styles.selectedDaySection}>
           <View style={styles.selectedDayHeader}>
-            <View>
+            <View style={styles.selectedDayInfo}>
               <Text style={styles.selectedDayTitle}>
                 {selectedDate.toDateString() === new Date().toDateString() ? 'Today' : 'Selected Day'}
               </Text>
               <Text style={styles.selectedDayDate}>{formatDate(selectedDate)}</Text>
+              
+              {/* Quick Statistics */}
+              {filteredEvents.length > 0 && (
+                <View style={styles.dayStats}>
+                  <View style={styles.statItem}>
+                    <Ionicons name="calendar" size={16} color={theme.colors.primary} />
+                    <Text style={styles.statText}>{filteredEvents.length} events</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Ionicons name="time" size={16} color={theme.colors.textSecondary} />
+                    <Text style={styles.statText}>
+                      {filteredEvents.length > 0 ? `Starting ${formatTime(filteredEvents[0].displayTime)}` : 'No schedule'}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+            
+            {/* Quick Action Buttons */}
+            <View style={styles.dayActions}>
+              <TouchableOpacity 
+                style={styles.quickActionButton}
+                onPress={() => {
+                  // Navigate to today if not already selected
+                  if (selectedDate.toDateString() !== new Date().toDateString()) {
+                    setSelectedDate(new Date());
+                    setCurrentDate(new Date());
+                  }
+                }}
+              >
+                <Ionicons name="today" size={18} color={theme.colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.quickActionButton}
+                onPress={() => setShowDoctorSelectionModal(true)}
+              >
+                <Ionicons name="add" size={18} color={theme.colors.primary} />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -1001,6 +1111,42 @@ export default function ModernCalendarScreen() {
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* Timeline View */}
+          {filteredEvents.length > 0 && (
+            <View style={styles.timelineContainer}>
+              <Text style={styles.timelineTitle}>Day Timeline</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.timelineScroll}>
+                <View style={styles.timeline}>
+                  {filteredEvents.map((event, index) => (
+                    <View key={`timeline-${event.type}-${event.id}-${index}`} style={styles.timelineItem}>
+                      <View style={styles.timelineTime}>
+                        <Text style={styles.timelineTimeText}>
+                          {formatTime(event.displayTime)}
+                        </Text>
+                      </View>
+                      <View style={[
+                        styles.timelineEvent,
+                        { backgroundColor: event.type === 'appointment' ? theme.colors.primary + '20' : 
+                          event.type === 'medication' ? '#FF6B6B20' : '#4ECDC420' }
+                      ]}>
+                        <Ionicons 
+                          name={getCategoryIcon(event.category || event.type) as any} 
+                          size={14} 
+                          color={event.type === 'appointment' ? theme.colors.primary : 
+                            event.type === 'medication' ? '#FF6B6B' : '#4ECDC4'} 
+                        />
+                        <Text style={styles.timelineEventTitle} numberOfLines={2}>
+                          {event.displayTitle}
+                        </Text>
+                      </View>
+                      {index < filteredEvents.length - 1 && <View style={styles.timelineConnector} />}
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          )}
 
           {/* Events List */}
           <View style={styles.eventsContainer}>
@@ -1708,6 +1854,67 @@ const createStyles = (theme: Theme): CalendarStyles => StyleSheet.create<Calenda
     borderRadius: 2,
   },
   
+  // Enhanced calendar day styles
+  hasEventsCell: {
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '30',
+  },
+  dayContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  eventPreview: {
+    position: 'absolute',
+    bottom: 2,
+    alignItems: 'center',
+    width: '100%',
+  },
+  eventCountBadge: {
+    backgroundColor: theme.colors.primary,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  selectedEventBadge: {
+    backgroundColor: 'white',
+  },
+  eventCountText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  selectedEventCountText: {
+    color: theme.colors.primary,
+  },
+  eventTypeIndicators: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  eventTypeIcon: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appointmentIcon: {
+    backgroundColor: theme.colors.primary + '30',
+  },
+  medicationIcon: {
+    backgroundColor: '#FF6B6B30',
+  },
+  reminderIcon: {
+    backgroundColor: '#4ECDC430',
+  },
+  selectedIcon: {
+    backgroundColor: 'white',
+  },
+  
   // Selected day section
   selectedDaySection: {
     padding: 16,
@@ -1715,8 +1922,19 @@ const createStyles = (theme: Theme): CalendarStyles => StyleSheet.create<Calenda
   selectedDayHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 16,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  selectedDayInfo: {
+    flex: 1,
   },
   selectedDayTitle: {
     fontSize: 20,
@@ -1727,6 +1945,34 @@ const createStyles = (theme: Theme): CalendarStyles => StyleSheet.create<Calenda
   selectedDayDate: {
     fontSize: 14,
     color: theme.colors.textSecondary,
+    marginBottom: 8,
+  },
+  dayStats: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statText: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  dayActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  quickActionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '20',
   },
   
   // Filter tabs
@@ -1781,6 +2027,68 @@ const createStyles = (theme: Theme): CalendarStyles => StyleSheet.create<Calenda
     color: 'white',
     fontSize: 9,
     fontWeight: '700',
+  },
+  
+  // Timeline styles
+  timelineContainer: {
+    marginBottom: 16,
+  },
+  timelineTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.textPrimary,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  timelineScroll: {
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
+  },
+  timeline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timelineItem: {
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  timelineTime: {
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '20',
+  },
+  timelineTimeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: theme.colors.textSecondary,
+  },
+  timelineEvent: {
+    width: 80,
+    height: 60,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  timelineEventTitle: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  timelineConnector: {
+    position: 'absolute',
+    right: -8,
+    top: 32,
+    width: 16,
+    height: 2,
+    backgroundColor: theme.colors.primary + '30',
   },
   
   // Events
