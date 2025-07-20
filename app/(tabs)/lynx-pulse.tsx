@@ -13,6 +13,7 @@ import {
     View,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
@@ -43,8 +44,8 @@ const CATEGORIES: Category[] = [
   { id: 'medication', name: 'Medication Safety', color: '#059669', icon: 'medical-outline' },
   { id: 'sleep', name: 'Sleep Health', color: '#0891B2', icon: 'moon-outline' },
   { id: 'chronic', name: 'Chronic Care', color: '#C2410C', icon: 'shield-checkmark-outline' },
-  { id: 'nutrition', name: 'Nutrition', color: '#16A34A', icon: 'nutrition-outline' },
-  { id: 'exercise', name: 'Exercise & Fitness', color: '#9333EA', icon: 'fitness-outline' },
+  { id: 'nutrition', name: 'Nutrition', color: '#16A34A', icon: 'leaf-outline' },
+  { id: 'exercise', name: 'Exercise & Fitness', color: '#9333EA', icon: 'barbell-outline' },
   { id: 'mental', name: 'Mental Health', color: '#2563EB', icon: 'happy-outline' },
 ];
 

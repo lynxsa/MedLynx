@@ -181,6 +181,7 @@ export default function TabLayout() {
       <Tabs.Screen name="medication-safety-tips" options={{ href: null }} />
       <Tabs.Screen name="healthy-sleep-habits" options={{ href: null }} />
       <Tabs.Screen name="managing-chronic-conditions" options={{ href: null }} />
+      <Tabs.Screen name="lynx-pulse" options={{ href: null }} />
       <Tabs.Screen name="+not-found" options={{ href: null }} />
     </Tabs>
   );
