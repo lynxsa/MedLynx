@@ -1,23 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
-  Animated,
-  Dimensions,
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Animated,
+    Dimensions,
+    FlatList,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StandardHeader } from '../../components/StandardHeader';
 import { ColorPalette } from '../../constants/DynamicTheme';
 import { useTheme } from '../../contexts/ThemeContext';
 import GeminiHealthService from '../../services/GeminiHealthService';
@@ -457,33 +457,20 @@ export default function DrLynxScreen() {
     >
       <LinearGradient
         colors={[colors.background, colors.backgroundSecondary]}
-        style={[styles.gradient, { paddingTop: insets.top }]}
+        style={[styles.gradient, { paddingTop: 0 }]}
       >
-        {/* Modern Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
-          
-          <View style={styles.headerCenter}>
-            <View style={styles.headerAvatarContainer}>
-              <Image 
-                source={require('../../assets/images/logo.png')}
-                style={styles.headerAvatarImage}
-                resizeMode="contain"
-              />
-              <View style={styles.statusIndicator} />
-            </View>
-            <View style={styles.headerText}>
-              <Text style={styles.headerTitle}>Dr. LYNX</Text>
-              <Text style={styles.headerSubtitle}>Always ready to help</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity style={styles.menuButton} onPress={clearChat}>
-            <Ionicons name="refresh-outline" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
+        {/* Standard Header */}
+        <StandardHeader 
+          title="Dr. LYNX"
+          subtitle="Always ready to help"
+          showBackButton={true}
+          showLogo={true}
+          rightComponent={
+            <TouchableOpacity onPress={clearChat}>
+              <Ionicons name="refresh-outline" size={20} color="#3726a6" />
+            </TouchableOpacity>
+          }
+        />
 
         {/* Chat Area */}
         <View style={styles.chatContainer}>

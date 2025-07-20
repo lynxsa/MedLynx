@@ -5,7 +5,6 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
-    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -13,7 +12,7 @@ import {
     View
 } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StandardHeader } from '../../components/StandardHeader';
 
 interface MedicationData {
   name: string;
@@ -62,7 +61,6 @@ const mockMedications: MedicationData[] = [
 ];
 
 const MedicationScannerScreen: React.FC = () => {
-  const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
   const [medicationData, setMedicationData] = useState<MedicationData | null>(null);
@@ -161,17 +159,18 @@ const MedicationScannerScreen: React.FC = () => {
 
   if (scanMode === 'results' && medicationData) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Header with Close Button */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={resetScan} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#3726a6" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Medication Details</Text>
-          <TouchableOpacity onPress={resetScan} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#3726a6" />
-          </TouchableOpacity>
-        </View>
+      <View style={[styles.container, { paddingTop: 0 }]}>
+        {/* Standard Header */}
+        <StandardHeader 
+          title="Medication Details"
+          showBackButton={true}
+          rightComponent={
+            <TouchableOpacity onPress={resetScan}>
+              <Ionicons name="close" size={24} color="#3726a6" />
+            </TouchableOpacity>
+          }
+          onBackPress={resetScan}
+        />
 
         <ScrollView style={styles.resultsContainer} showsVerticalScrollIndicator={false}>
           {/* Enhanced Medication Card */}
@@ -510,29 +509,19 @@ const MedicationScannerScreen: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Image
-          source={require('../../assets/images/MedLynx-11.jpeg')}
-          style={styles.headerBackgroundImage}
-        />
-        <LinearGradient
-          colors={['rgba(124, 58, 237, 0.8)', 'rgba(139, 92, 246, 0.8)']}
-          style={styles.headerOverlay}
-        >
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitleLight}>MedScan</Text>
+    <View style={[styles.container, { paddingTop: 0 }]}>
+      {/* Standard Header */}
+      <StandardHeader 
+        title="MedScan"
+        showBackButton={true}
+        rightComponent={
           <TouchableOpacity 
-            style={styles.helpButton}
             onPress={() => setShowInstructions(!showInstructions)}
           >
-            <Ionicons name={showInstructions ? "eye-off-outline" : "help-circle-outline"} size={24} color="#FFFFFF" />
+            <Ionicons name={showInstructions ? "eye-off-outline" : "help-circle-outline"} size={24} color="#3726a6" />
           </TouchableOpacity>
-        </LinearGradient>
-      </View>
+        }
+      />
 
       {/* Camera View */}
       <View style={styles.cameraContainer}>
