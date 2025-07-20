@@ -1,8 +1,8 @@
-import { View, Image, Text, StyleSheet, Animated, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useRef, useEffect } from 'react';
-import { router as routerStatic, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router as routerStatic, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Image, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
 
@@ -38,20 +38,20 @@ export default function SplashScreen() {
                     setIsLoading(false);
                     
                     if (!hasCompletedOnboarding) {
-                        // First-time user - show onboarding
+                        // First-time user - show modern onboarding
                         try {
-                            router.replace('/vibrant-onboarding');
+                            router.replace('/clean-onboarding');
                         } catch (error) {
                             console.log('useRouter failed, trying static router:', error);
-                            routerStatic.replace('/vibrant-onboarding');
+                            routerStatic.replace('/clean-onboarding');
                         }
                     } else {
-                        // Returning user - go to auth
+                        // Returning user - go to modern auth
                         try {
-                            router.replace('/auth');
+                            router.replace('/modern-auth');
                         } catch (error) {
                             console.log('useRouter failed, trying static router:', error);
-                            routerStatic.replace('/auth');
+                            routerStatic.replace('/modern-auth');
                         }
                     }
                 }, 3000);
@@ -63,10 +63,10 @@ export default function SplashScreen() {
                 const timer = setTimeout(() => {
                     setIsLoading(false);
                     try {
-                        router.replace('/auth');
+                        router.replace('/modern-auth');
                     } catch (routerError) {
                         console.log('Router error:', routerError);
-                        routerStatic.replace('/auth');
+                        routerStatic.replace('/modern-auth');
                     }
                 }, 3000);
                 
@@ -75,7 +75,7 @@ export default function SplashScreen() {
         };
 
         checkFirstTimeUser();
-        }, [fadeAnim, router, scaleAnim]);
+    }, [fadeAnim, router, scaleAnim]);
     
     return (
         <View style={styles.container}>

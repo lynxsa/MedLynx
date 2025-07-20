@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { MedicationStorage } from '../utils/MedicationStorage';
+import React, { createContext, useContext, useEffect, useReducer } from 'react';
+import { DailyProgress, Medication } from '../types';
 import { EnhancedNotificationService } from '../utils/EnhancedNotificationService';
-import { Medication, DailyProgress } from '../types';
+import { MedicationStorage } from '../utils/MedicationStorage';
 
 interface AppState {
   medications: Medication[];
@@ -152,6 +152,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           dosage: newMedication.dosage,
           frequency: newMedication.frequency,
           times: newMedication.time,
+          time: newMedication.time[0], // First time for backward compatibility
+          daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // Daily by default
           startDate: new Date(),
           instructions: `Take ${newMedication.dosage}`,
           isActive: true,
@@ -184,6 +186,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               dosage: updatedMed.dosage,
               frequency: updatedMed.frequency,
               times: updatedMed.time,
+              time: updatedMed.time[0], // First time for backward compatibility
+              daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // Daily by default
               startDate: new Date(),
               instructions: `Take ${updatedMed.dosage}`,
               isActive: true,

@@ -1,21 +1,20 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  StatusBar,
-  StyleSheet,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { EnhancedNotificationService, MedicationReminder } from '../../utils/EnhancedNotificationService';
-import notifee from '@notifee/react-native';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useState } from 'react';
+import {
+    Alert,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../../constants/DynamicTheme'; // Import Theme type
+import { useTheme } from '../../contexts/ThemeContext';
+import { EnhancedNotificationService, MedicationReminder } from '../../utils/EnhancedNotificationService';
 
 export default function NotificationTestScreen() {
   const { theme, themeMode } = useTheme(); // Use themeMode for StatusBar
@@ -26,28 +25,28 @@ export default function NotificationTestScreen() {
   const testNotificationIn10Seconds = async () => {
     setIsLoading(true);
     try {
-      const testReminder: MedicationReminder = {
-        id: `test_${Date.now()}`,
-        medicationName: 'Test Medication',
-        dosage: '10mg',
-        frequency: 'Daily',
-        times: ['18:30'], // Will be overridden
-        startDate: new Date(),
-        instructions: 'Test notification for demo purposes',
-        isActive: true,
-      };
-
       const testTime = new Date();
       testTime.setSeconds(testTime.getSeconds() + 10);
       const timeString = testTime.toTimeString().slice(0, 5);
       
-      testReminder.times = [timeString];
+      const testReminder: MedicationReminder = {
+        id: 'test-med-123',
+        medicationName: 'Test Medication',
+        dosage: '500mg',
+        frequency: 'Daily',
+        times: ['09:00', '21:00'],
+        time: '09:00',
+        daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+        startDate: new Date(),
+        instructions: 'Take with food',
+        isActive: true,
+      };
 
       await EnhancedNotificationService.scheduleMedicationReminder(testReminder);
       
       Alert.alert(
         '🎉 Test Notification Scheduled!',
-        `A test medication reminder will appear in 10 seconds.\n\nTime: ${timeString}\nYou'll see quick action buttons to test the interaction.`,
+        `A test medication reminder will appear in 10 seconds.\n\nTime: ${timeString}\nYou'll see the notification appear on your device.`,
         [{ text: 'Got it!' }]
       );
     } catch (error) {
@@ -61,46 +60,21 @@ export default function NotificationTestScreen() {
   const testImmediateNotification = async () => {
     setIsLoading(true);
     try {
-      await EnhancedNotificationService.initialize();
-      
-      await notifee.displayNotification({
-        title: '💊 MedLynx Reminder',
-        body: 'Time to take your Vitamin D (1000mg) - Test notification',
-        data: {
+      await EnhancedNotificationService.sendImmediateNotification(
+        '💊 MedLynx Reminder',
+        'Time to take your Vitamin D (1000mg) - Test notification',
+        {
           medicationId: 'test_123',
           medicationName: 'Vitamin D',
           dosage: '1000mg',
           time: new Date().toTimeString().slice(0, 5),
-        },
-        android: {
-          channelId: 'medication-reminders',
-          importance: 4, // HIGH
-          pressAction: {
-            id: 'default',
-            launchActivity: 'default',
-          },
-          actions: [
-            {
-              title: '✅ Taken',
-              pressAction: { id: 'taken', launchActivity: 'default' },
-            },
-            {
-              title: '⏰ Snooze 10min',
-              pressAction: { id: 'snooze', launchActivity: 'default' },
-            },
-            {
-              title: '❌ Skip',
-              pressAction: { id: 'skip', launchActivity: 'default' },
-            },
-          ],
-          color: theme.colors.primary, // Use theme color
-          largeIcon: require('../../assets/images/icon.png'),
-        },
-      });
+          type: 'medication_reminder',
+        }
+      );
       
       Alert.alert(
         '🔔 Immediate Notification Sent!',
-        'Check your notification panel to see the MedLynx reminder with quick action buttons.',
+        'Check your notification panel to see the MedLynx reminder. The notification should appear immediately.',
         [{ text: 'Check Notifications' }]
       );
     } catch (error) {

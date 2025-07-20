@@ -1,31 +1,31 @@
-import React, { useState, useEffect } from 'react'; // Removed unused useMemo
-import {
-  View,
-  // Text, // Removed unused import
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  Linking,
-  // TextInput, // Removed unused import
-  ActivityIndicator,
-  Platform,
-  FlatList, // Added for pharmacy list in modal
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react'; // Removed unused useMemo
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../contexts/ThemeContext'; // Corrected import and usage
-import { useThemedStyles } from '../../hooks/useThemedStyles';
+import {
+    // TextInput, // Removed unused import
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Linking,
+    Modal,
+    Platform,
+    ScrollView,
+    // Text, // Removed unused import
+    StyleSheet,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ThemedButton from '../../components/ThemedButton';
+import ThemedInput from '../../components/ThemedInput';
 import { ThemedText } from '../../components/ThemedText';
 import { ThemedView } from '../../components/ThemedView';
-import ThemedButton from '../../components/ThemedButton'; 
-import ThemedInput from '../../components/ThemedInput'; 
+import { useTheme } from '../../contexts/ThemeContext'; // Corrected import and usage
+import { useThemedStyles } from '../../hooks/useThemedStyles';
 
 interface PrescriptionUpload {
   id: string;
@@ -775,11 +775,11 @@ const getStyles = (theme: any) => StyleSheet.create({ // Use Theme type from Dyn
     fontSize: 14,
   },
   prescriptionCard: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: theme.colors.shadow,
+    shadowColor: theme.colors.shadow.light,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -917,13 +917,13 @@ const getStyles = (theme: any) => StyleSheet.create({ // Use Theme type from Dyn
     height: 44,
     marginLeft: 8,
     fontSize: 16,
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
   },
   pharmacyCard: {
     marginBottom: 16,
     borderRadius: 12,
-    backgroundColor: theme.colors.card,
-    shadowColor: theme.colors.shadow,
+    backgroundColor: theme.colors.card.background,
+    shadowColor: theme.colors.shadow.light,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

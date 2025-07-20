@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react';
-import { View, Image, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useState } from 'react';
+import { Dimensions, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BiometricAuth } from '../../utils/BiometricAuth';
+import { Theme } from '../../constants/DynamicTheme'; // Import Theme type
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
-import * as LocalAuthentication from 'expo-local-authentication';
-import { Theme } from '../../constants/DynamicTheme'; // Import Theme type
+import { BiometricAuth } from '../../utils/BiometricAuth';
 
 const { width } = Dimensions.get('window');
 
@@ -43,7 +42,7 @@ export default function AuthScreen() {
             );
 
             if (success) {
-                router.replace('/enhanced-home' as any);
+                router.replace('/enhanced-home-clean' as any);
             } else {
                 setError("Authentication failed. Please try again.");
             }
@@ -59,7 +58,7 @@ export default function AuthScreen() {
     };
 
     const skipAuth = () => {
-        router.replace('/enhanced-home' as any);
+        router.replace('/enhanced-home-clean' as any);
     };
 
     const checkBiometricSupport = async () => {
@@ -82,9 +81,8 @@ export default function AuthScreen() {
                 barStyle="light-content" 
                 backgroundColor={theme.colors.primary} 
             />
-            <LinearGradient
-                colors={theme.gradients.primary as [string, string]}
-                style={styles.gradient}
+            <View
+                style={[styles.gradient, { backgroundColor: theme.colors.primary }]}
             >
                 <View style={[styles.content, { paddingTop: insets.top + 60 }]}>
                     {/* Logo Section */}
@@ -104,28 +102,29 @@ export default function AuthScreen() {
 
                     {/* Authentication Section */}
                     <View style={styles.authSection}>
-                        <View style={styles.authCard}>                            <View style={styles.authIcon}>
+                        <View style={styles.authCard}>
+                            <View style={styles.authIcon}>
                                 <Ionicons 
                                     name={hasBiometric ? "finger-print" : "lock-closed"} 
-                                    size={48} 
+                                    size={32} 
                                     color={theme.colors.primary}
                                 />
                             </View>
                             
                             <Text style={styles.authTitle}>
-                                {hasBiometric ? "Biometric Authentication" : "Device Security"}
+                                {hasBiometric ? "Biometric Login" : "Device Security"}
                             </Text>
                             
                             <Text style={styles.authDescription}>
                                 {hasBiometric 
-                                    ? "Use your fingerprint or face to securely access MedLynx"
+                                    ? "Use biometrics to access MedLynx"
                                     : "Use your device PIN to access MedLynx"
                                 }
                             </Text>
 
                             {error && (
                                 <View style={styles.errorContainer}>
-                                    <Ionicons name="warning" size={16} color={theme.colors.error} />
+                                    <Ionicons name="warning" size={14} color={theme.colors.error} />
                                     <Text style={styles.errorText}>{error}</Text>
                                 </View>
                             )}
@@ -141,7 +140,7 @@ export default function AuthScreen() {
                                     <>
                                         <Ionicons 
                                             name={hasBiometric ? "finger-print" : "lock-open"} 
-                                            size={20} 
+                                            size={18} 
                                             color={theme.colors.white} 
                                         />
                                         <Text style={styles.authButtonText}>
@@ -173,7 +172,7 @@ export default function AuthScreen() {
                         </View>
                     </View>
                 </View>
-            </LinearGradient>
+            </View>
         </View>
     );
 }
@@ -230,65 +229,57 @@ const createStyles = (theme: Theme, width: number, insets: any) => StyleSheet.cr
         opacity: 0.9,
     },
     authSection: {
-        flex: 1.5, // Give a bit more space for the card
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingBottom: 20, // Add some padding at the bottom of the card section
+        paddingBottom: 40,
     },
     authCard: {
-        // backgroundColor: theme.colors.white, // Removed white background
-        backgroundColor: theme.colors.glass.background, // Use glass background
-        borderColor: theme.colors.glass.border, // Use glass border
-        borderWidth: 1, // Add border width for glass effect
-        borderRadius: 24,
-        padding: 32,
-        width: width * 0.9,
+        backgroundColor: theme.colors.glass.background,
+        borderColor: theme.colors.glass.border,
+        borderWidth: 1,
+        borderRadius: 20,
+        padding: 24,
+        width: width * 0.85,
         alignItems: 'center',
-        // Removed shadow properties to rely on glassmorphism
-        // shadowColor: theme.colors.shadow.medium,
-        // shadowOffset: {
-        //     width: 0,
-        //     height: 8,
-        // },
-        // shadowOpacity: 0.3,
-        // shadowRadius: 16,
-        // elevation: 10,
+        maxHeight: 280, // Limit height to make it more compact
     },
     authIcon: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         backgroundColor: theme.colors.primary + '15',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 16,
     },
     authTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         color: theme.colors.textPrimary,
-        marginBottom: 8,
+        marginBottom: 6,
         textAlign: 'center',
     },
     authDescription: {
-        fontSize: 14,
+        fontSize: 13,
         color: theme.colors.textSecondary,
         textAlign: 'center',
-        lineHeight: 20,
-        marginBottom: 24,
+        lineHeight: 18,
+        marginBottom: 20,
+        paddingHorizontal: 8,
     },
     errorContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: theme.colors.error + '15',
-        padding: 12,
-        borderRadius: 12,
-        marginBottom: 20,
+        padding: 10,
+        borderRadius: 10,
+        marginBottom: 16,
         width: '100%',
     },
     errorText: {
-        marginLeft: 8,
-        fontSize: 14,
+        marginLeft: 6,
+        fontSize: 12,
         color: theme.colors.error,
         flex: 1,
     },
@@ -297,19 +288,19 @@ const createStyles = (theme: Theme, width: number, insets: any) => StyleSheet.cr
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 16,
-        paddingHorizontal: 32,
-        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 14,
         width: '100%',
-        marginBottom: 16,
-        shadowColor: theme.colors.primary, // Changed from theme.colors.shadow.colored
+        marginBottom: 12,
+        shadowColor: theme.colors.primary,
         shadowOffset: {
             width: 0,
-            height: 4,
+            height: 3,
         },
         shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
+        shadowRadius: 6,
+        elevation: 5,
     },
     authButtonDisabled: {
         opacity: 0.6,

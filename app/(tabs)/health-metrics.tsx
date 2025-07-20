@@ -1,25 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  StatusBar,
-  Alert,
-  // Dimensions, // Removed unused import
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-// import { useTranslation } from 'react-i18next'; // Commented out as unused
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StandardHeader } from '../../components/StandardHeader';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
-
-// Removed unused width constant
 
 interface BMIReading {
   id: string;
@@ -28,30 +24,58 @@ interface BMIReading {
   height: number;
   weight: number;
   date: Date;
+  trend?: 'improving' | 'stable' | 'concerning';
 }
 
 interface HealthMetric {
   id: string;
-  type: 'bloodPressure' | 'bloodSugar' | 'heartRate';
+  type: 'bloodPressure' | 'bloodSugar' | 'heartRate' | 'weight' | 'steps' | 'sleep';
   value: string;
   date: Date;
   notes?: string;
+  aiInsight?: string;
+  status?: 'normal' | 'elevated' | 'high' | 'low';
+}
+
+interface HealthTrend {
+  metric: string;
+  direction: 'up' | 'down' | 'stable';
+  percentage: number;
+  period: string;
+  recommendation: string;
+}
+
+interface SmartInsight {
+  type: 'achievement' | 'concern' | 'recommendation' | 'trend';
+  title: string;
+  description: string;
+  actionable: boolean;
+  priority: 'low' | 'medium' | 'high';
 }
 
 export default function HealthMetricsScreen() {
   const { theme, isDark } = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
-  // const { t } = useTranslation(['common', 'health']); // Commented out as unused
+  
+  // Enhanced state for intelligent health tracking
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [heightUnit, setHeightUnit] = useState<'cm' | 'ft'>('cm');
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg');
   const [currentBMI, setCurrentBMI] = useState<number | null>(null);
-  const [bmiCategory, setBMICategory] = useState<string>('');
   const [bmiHistory, setBMIHistory] = useState<BMIReading[]>([]);
-  const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([]); // Restored as it's used in loadHealthMetrics
-  // const [showAddMetric, setShowAddMetric] = useState(false); // Commented out as unused
+  const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([]);
+  const [bmiCategory, setBMICategory] = useState<string>('');
+  const [healthTrends, setHealthTrends] = useState<HealthTrend[]>([]);
+  const [smartInsights, setSmartInsights] = useState<SmartInsight[]>([]);
+  const [healthScore, setHealthScore] = useState<number>(0);
+  const [weeklyGoals, setWeeklyGoals] = useState({
+    steps: 10000,
+    weight: 'maintain',
+    bloodPressure: 'monitor',
+    sleep: 8
+  });
 
   useEffect(() => {
     loadBMIHistory();
@@ -284,20 +308,17 @@ export default function HealthMetricsScreen() {
     <View style={styles.container}>
       <StatusBar 
         barStyle={isDark ? "light-content" : "dark-content"} 
-        backgroundColor={theme.colors.primary} 
+        backgroundColor={theme.colors.background} 
       />
-      <LinearGradient 
-        colors={theme.gradients.primary as any} 
-        style={[styles.header, { paddingTop: insets.top }]}
-      >
-        <View style={styles.headerContent}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.textOnPrimary} />
+      <StandardHeader
+        title="Health Metrics"
+        showBackButton={true}
+        rightComponent={
+          <TouchableOpacity style={styles.helpButton}>
+            <Ionicons name="help-circle-outline" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Health Metrics</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-      </LinearGradient>
+        }
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* BMI Calculator */}
@@ -414,39 +435,27 @@ const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingBottom: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
+  helpButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.textOnPrimary,
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 32,
   },
   content: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
   section: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card.background,
     margin: 20,
     borderRadius: 12,
     padding: 20,
-    ...theme.shadows.medium,
+    shadowColor: theme.colors.shadow.medium,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -594,12 +603,16 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   historyContainer: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card.background,
     margin: 20,
     marginTop: 0,
     borderRadius: 12,
     padding: 20,
-    ...theme.shadows.medium,
+    shadowColor: theme.colors.shadow.medium,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   historyTitle: {
     fontSize: 18,

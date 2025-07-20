@@ -1,123 +1,147 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  StatusBar,
   Alert,
+  Animated,
+  Dimensions,
+  FlatList,
+  Image,
   KeyboardAvoidingView,
   Platform,
-  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ColorPalette } from '../../constants/DynamicTheme';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useThemedStyles } from '../../hooks/useThemedStyles';
-import ThemedGlassCard from '../../components/ThemedGlassCard';
+import GeminiHealthService from '../../services/GeminiHealthService';
+
+const { width } = Dimensions.get('window');
+
+// Initialize Gemini Health Service with your API key
+const GEMINI_API_KEY = 'AIzaSyDpbXKi1BQDHkqUwSEeTf-8uDK6VjlSQT8';
+const geminiService = new GeminiHealthService(GEMINI_API_KEY);
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
-  type?: 'text' | 'health-tip' | 'diet-recommendation' | 'emergency' | 'appointment-suggestion';
+  typing?: boolean;
   urgency?: 'low' | 'medium' | 'high' | 'emergency';
-  followUpSuggestions?: string[];
+  type?: string;
 }
 
-interface QuickAction {
+interface QuickQuestion {
+  id: string;
+  icon: keyof typeof Ionicons.glyphMap;
   title: string;
-  description: string;
+  subtitle: string;
   query: string;
-  icon: string;
+  color: string;
 }
 
-const quickActionsData: QuickAction[] = [
+const QUICK_QUESTIONS: QuickQuestion[] = [
   {
-    title: "Symptom Check",
-    description: "Describe your symptoms for health guidance",
-    query: "I'm experiencing symptoms and need guidance",
-    icon: "medical"
+    id: '1',
+    icon: 'medical',
+    title: 'Symptom Analysis',
+    subtitle: 'AI-powered health assessment',
+    query: 'I\'m experiencing some symptoms and would like a comprehensive health assessment',
+    color: '#7C3AED',
   },
   {
-    title: "Medication Info",
-    description: "Ask about medications and interactions",
-    query: "I need information about medications",
-    icon: "flask"
+    id: '2',
+    icon: 'heart',
+    title: 'Heart Health',
+    subtitle: 'Cardiovascular wellness check',
+    query: 'Help me understand my heart health and provide cardiovascular wellness recommendations',
+    color: '#8B5CF6',
   },
   {
-    title: "Diet Advice",
-    description: "Get personalized nutrition recommendations",
-    query: "I need dietary advice and recommendations",
-    icon: "nutrition"
+    id: '3',
+    icon: 'nutrition',
+    title: 'Nutrition Guide',
+    subtitle: 'Personalized diet planning',
+    query: 'I need personalized nutrition advice and meal planning based on my health profile',
+    color: '#A855F7',
   },
   {
-    title: "Emergency Guide",
-    description: "First aid and emergency procedures",
-    query: "I need emergency medical guidance",
-    icon: "warning"
+    id: '4',
+    icon: 'fitness',
+    title: 'Fitness Plan',
+    subtitle: 'Custom exercise routine',
+    query: 'Create a comprehensive fitness plan tailored to my health condition and goals',
+    color: '#9333EA',
   },
   {
-    title: "Exercise Tips",
-    description: "Safe exercises and fitness advice",
-    query: "I want exercise and fitness recommendations",
-    icon: "fitness"
+    id: '5',
+    icon: 'medkit',
+    title: 'Medications',
+    subtitle: 'Drug interactions & guidance',
+    query: 'Help me understand my medications, check for interactions, and provide dosage guidance',
+    color: '#7C3AED',
   },
   {
-    title: "Mental Health",
-    description: "Mental wellness and stress management",
-    query: "I need mental health support and advice",
-    icon: "heart"
-  }
+    id: '6',
+    icon: 'moon',
+    title: 'Sleep Health',
+    subtitle: 'Optimize sleep quality',
+    query: 'How can I improve my sleep quality and establish better sleep habits for optimal health?',
+    color: '#8B5CF6',
+  },
 ];
 
 export default function DrLynxScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const styles = useThemedStyles(createStyles);
-  const scrollViewRef = useRef<FlatList<Message>>(null);
+  const colors = theme.colors as ColorPalette;
+  const flatListRef = useRef<FlatList<Message>>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [showQuickActions, setShowQuickActions] = useState(true);
-
-  const addWelcomeMessage = useCallback(() => {
-    if (messages.length === 0) {
-      const welcomeMessage: Message = {
-        id: 'welcome-' + Date.now(),
-        text: `Hello! I'm Dr. LYNX, your AI health companion. I'm here to help with health questions, symptoms, diet advice, and wellness tips specifically for South African healthcare. How can I assist you today?`,
-        isUser: false,
-        timestamp: new Date(),
-        type: 'text'
-      };
-      setMessages([welcomeMessage]);
-    }
-  }, [messages.length]);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
-    const initializeChat = async () => {
-      await loadChatHistory();
-      addWelcomeMessage();
-    };
-    
-    initializeChat();
-  }, [addWelcomeMessage]);
+    loadChatHistory();
+    // Animate welcome screen entrance with smoother timing
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, slideAnim]);
 
   const loadChatHistory = async () => {
     try {
       const chatHistory = await AsyncStorage.getItem('drLynxChatHistory');
       if (chatHistory) {
         const parsedHistory = JSON.parse(chatHistory);
-        setMessages(parsedHistory.map((msg: any) => ({
+        const parsedMessages = parsedHistory.map((msg: any) => ({
           ...msg,
           timestamp: new Date(msg.timestamp)
-        })));
+        }));
+        setMessages(parsedMessages);
+        if (parsedMessages.length > 0) {
+          setShowWelcome(false);
+        }
       }
     } catch (error) {
       console.error('Error loading chat history:', error);
@@ -132,554 +156,801 @@ export default function DrLynxScreen() {
     }
   };
 
-  const generateAIResponse = async (userMessage: string): Promise<Message> => {
-    // Simulate AI response - in real app, this would call your AI service
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    let responseText = "";
-    let messageType: Message['type'] = 'text';
-    let urgency: Message['urgency'] = 'low';
-
-    // Simple keyword-based responses for demo
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('emergency') || lowerMessage.includes('urgent')) {
-      responseText = "⚠️ If this is a medical emergency, please call 10177 (Netcare 911) or 112 immediately. For urgent care, visit your nearest hospital emergency room. I can provide general health information, but I cannot replace emergency medical services.";
-      messageType = 'emergency';
-      urgency = 'emergency';
-    } else if (lowerMessage.includes('symptom') || lowerMessage.includes('pain') || lowerMessage.includes('fever')) {
-      responseText = "I understand you're experiencing symptoms. While I can provide general health information, it's important to consult with a healthcare professional for proper diagnosis and treatment. Can you describe your symptoms in more detail? Also, consider visiting a nearby clinic or contacting your GP.";
-      messageType = 'health-tip';
-      urgency = 'medium';
-    } else if (lowerMessage.includes('medication') || lowerMessage.includes('medicine')) {
-      responseText = "For medication information, I recommend consulting with a pharmacist or your doctor. They can provide specific guidance about dosages, interactions, and side effects. You can also find certified pharmacies through the South African Pharmacy Council. What specific medication questions do you have?";
-      messageType = 'text';
-    } else if (lowerMessage.includes('diet') || lowerMessage.includes('nutrition') || lowerMessage.includes('food')) {
-      responseText = "Good nutrition is essential for health! For South Africans, I recommend including local foods like morogo (leafy greens), sweet potatoes, beans, and lean proteins. The SA Department of Health recommends 5 servings of fruits and vegetables daily. Would you like specific dietary advice for any health conditions?";
-      messageType = 'diet-recommendation';
-    } else {
-      responseText = "Thank you for your question. I'm here to help with health-related topics including symptoms, medications, diet, exercise, and wellness tips tailored for South African healthcare. Could you provide more details about what specific health information you're looking for?";
-    }
-
-    return {
-      id: 'ai-' + Date.now(),
-      text: responseText,
-      isUser: false,
-      timestamp: new Date(),
-      type: messageType,
-      urgency,
-      followUpSuggestions: ['Tell me more', 'Find nearby facilities', 'Get emergency contacts']
-    };
-  };
-
-  const sendMessage = async () => {
-    if (!inputText.trim()) return;
-
-    const userMessage: Message = {
-      id: 'user-' + Date.now(),
-      text: inputText.trim(),
-      isUser: true,
-      timestamp: new Date(),
-      type: 'text'
-    };
-
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
-    setInputText('');
-    setShowQuickActions(false);
-    setIsTyping(true);
-
-    // Scroll to bottom
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-
-    try {
-      const aiResponse = await generateAIResponse(userMessage.text);
-      const finalMessages = [...newMessages, aiResponse];
-      setMessages(finalMessages);
-      await saveChatHistory(finalMessages);
-    } catch (error) {
-      console.error('Error generating AI response:', error);
-      const errorMessage: Message = {
-        id: 'error-' + Date.now(),
-        text: "I'm having trouble responding right now. Please try again in a moment.",
-        isUser: false,
-        timestamp: new Date(),
-        type: 'text'
-      };
-      const finalMessages = [...newMessages, errorMessage];
-      setMessages(finalMessages);
-    } finally {
-      setIsTyping(false);
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  };
-
-  const handleQuickAction = (action: QuickAction) => {
-    setInputText(action.query);
-    setShowQuickActions(false);
-  };
-
   const clearChat = () => {
     Alert.alert(
-      'Clear Chat',
-      'Are you sure you want to clear all messages?',
+      'Clear Conversation',
+      'Are you sure you want to start a new conversation?',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
+        { 
+          text: 'Clear', 
           style: 'destructive',
-          onPress: async () => {
+          onPress: () => {
             setMessages([]);
-            await AsyncStorage.removeItem('drLynxChatHistory');
-            setShowQuickActions(true);
-            addWelcomeMessage();
+            setShowWelcome(true);
+            AsyncStorage.removeItem('drLynxChatHistory');
+            
+            // Re-animate welcome screen
+            fadeAnim.setValue(0);
+            slideAnim.setValue(50);
+            
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+              }),
+              Animated.spring(slideAnim, {
+                toValue: 0,
+                tension: 50,
+                friction: 8,
+                useNativeDriver: true,
+              }),
+            ]).start();
           }
-        }
+        },
       ]
     );
   };
 
-  const getMessageTypeIcon = (type: Message['type']) => {
-    switch (type) {
-      case 'health-tip':
-        return <Ionicons name="bulb" size={16} color={theme.colors.warning} />;
-      case 'diet-recommendation':
-        return <Ionicons name="nutrition" size={16} color={theme.colors.success} />;
-      case 'emergency':
-        return <Ionicons name="warning" size={16} color={theme.colors.error} />;
-      case 'appointment-suggestion':
-        return <Ionicons name="calendar" size={16} color={theme.colors.info} />;
-      default:
-        return <Ionicons name="medical" size={16} color={theme.colors.primary} />;
+  const handleQuickQuestion = (question: QuickQuestion) => {
+    setInputText(question.query);
+    setShowWelcome(false);
+    // Auto-send with smoother transition
+    setTimeout(() => {
+      sendMessage(question.query);
+    }, 150);
+  };
+
+  const sendMessage = async (messageText?: string) => {
+    const textToSend = messageText || inputText.trim();
+    if (!textToSend) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: textToSend,
+      isUser: true,
+      timestamp: new Date(),
+    };
+
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInputText('');
+    setShowWelcome(false);
+    setIsTyping(true);
+
+    try {
+      // Use real Gemini API for AI responses
+      const geminiResponse = await geminiService.sendMessage(textToSend);
+      
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: geminiResponse.text,
+        isUser: false,
+        timestamp: new Date(),
+        urgency: geminiResponse.urgency,
+        type: geminiResponse.type,
+      };
+
+      const finalMessages = [...updatedMessages, aiMessage];
+      setMessages(finalMessages);
+      setIsTyping(false);
+      saveChatHistory(finalMessages);
+
+      // Show emergency alert if needed
+      if (geminiResponse.urgency === 'emergency') {
+        Alert.alert(
+          '🚨 Medical Emergency Detected',
+          'Please call emergency services immediately at 10177 if this is life-threatening.',
+          [
+            { text: 'I understand', style: 'default' },
+            { text: 'Call 10177', onPress: () => {
+              // In a real app, you could use Linking.openURL('tel:10177')
+              Alert.alert('Emergency', 'This would dial 10177 in a real app');
+            }},
+          ]
+        );
+      }
+
+      // Smooth scroll to bottom
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      
+      // Fallback response for API errors
+      const fallbackMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I apologize, but I'm having trouble connecting to my knowledge base right now. For urgent health concerns, please contact your healthcare provider or call emergency services at 10177.",
+        isUser: false,
+        timestamp: new Date(),
+        urgency: 'medium',
+        type: 'error',
+      };
+
+      const finalMessages = [...updatedMessages, fallbackMessage];
+      setMessages(finalMessages);
+      setIsTyping(false);
+      saveChatHistory(finalMessages);
+
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     }
   };
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <View style={[
-      styles.messageContainer,
-      item.isUser ? styles.userMessage : styles.aiMessage
-    ]}>
-      {!item.isUser && (
-        <View style={styles.aiHeader}>
-          <View style={styles.aiAvatar}>
-            <Ionicons name="medical" size={20} color={theme.colors.white} />
+  const renderTypingIndicator = () => {
+    if (!isTyping) return null;
+
+    return (
+      <View style={styles.typingContainer}>
+        <View style={styles.aiAvatarContainer}>
+          <Image 
+            source={require('../../assets/images/logo.png')}
+            style={styles.aiAvatarImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.typingBubble}>
+          <View style={styles.typingDots}>
+            <Animated.View style={[styles.typingDot, styles.dot1]} />
+            <Animated.View style={[styles.typingDot, styles.dot2]} />
+            <Animated.View style={[styles.typingDot, styles.dot3]} />
           </View>
-          <View style={styles.aiInfo}>
-            <Text style={styles.aiName}>Dr. LYNX</Text>
-            <Text style={styles.timestamp}>
-              {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const renderMessage = ({ item }: { item: Message }) => {
+    const urgencyColor = item.urgency === 'emergency' ? '#EF4444' : 
+                        item.urgency === 'high' ? '#F59E0B' :
+                        item.urgency === 'medium' ? '#3B82F6' : '#10B981';
+
+    const highPriorityUrgencies = ['medium', 'high', 'emergency'];
+    const showUrgencyBadge = !item.isUser && item.urgency && highPriorityUrgencies.includes(item.urgency);
+
+    return (
+      <View style={[
+        styles.messageWrapper,
+        item.isUser ? styles.userMessageWrapper : styles.aiMessageWrapper
+      ]}>
+        {!item.isUser && (
+          <View style={styles.aiAvatarContainer}>
+            <Image 
+              source={require('../../assets/images/logo.png')}
+              style={styles.aiAvatarImage}
+              resizeMode="contain"
+            />
           </View>
-          {item.type && item.type !== 'text' && (
-            <View style={styles.messageTypeIcon}>
-              {getMessageTypeIcon(item.type)}
+        )}
+        
+        <View style={[
+          styles.messageBubble,
+          item.isUser ? styles.userMessage : styles.aiMessage,
+          showUrgencyBadge && {
+            borderColor: urgencyColor,
+            borderWidth: 2,
+          }
+        ]}>
+          {showUrgencyBadge && (
+            <View style={[styles.urgencyBadge, { backgroundColor: urgencyColor }]}>
+              <Text style={styles.urgencyText}>
+                {item.urgency === 'emergency' ? '🚨 EMERGENCY' : 
+                 item.urgency === 'high' ? '⚠️ HIGH PRIORITY' : 
+                 item.urgency === 'medium' ? 'ℹ️ MEDIUM PRIORITY' : ''}
+              </Text>
             </View>
           )}
-        </View>
-      )}
-      
-      <ThemedGlassCard style={StyleSheet.flatten([
-        styles.messageBubble,
-        item.isUser ? styles.userBubble : styles.aiBubble,
-        item.urgency === 'emergency' ? styles.emergencyBubble : null
-      ])}>
-        <Text style={[
-          styles.messageText,
-          item.isUser ? styles.userMessageText : styles.aiMessageText,
-          item.urgency === 'emergency' && styles.emergencyText
-        ]}>
-          {item.text}
-        </Text>
-      </ThemedGlassCard>
-
-      {item.isUser && (
-        <View style={styles.userInfo}>
-          <Text style={styles.timestamp}>
+          
+          <Text style={[
+            styles.messageText,
+            item.isUser ? styles.userMessageText : styles.aiMessageText,
+            item.urgency === 'emergency' && { fontSize: 15, fontWeight: '600' }
+          ]}>
+            {item.text}
+          </Text>
+          <Text style={[
+            styles.messageTime,
+            item.isUser ? styles.userMessageTime : styles.aiMessageTime
+          ]}>
             {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </Text>
-          <View style={styles.userAvatar}>
-            <Ionicons name="person" size={20} color={theme.colors.white} />
+        </View>
+      </View>
+    );
+  };
+
+  const renderWelcomeScreen = () => {
+    if (!showWelcome) return null;
+
+    return (
+      <Animated.View 
+        style={[
+          styles.welcomeContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        {/* Hero Section */}
+        <View style={styles.welcomeHeader}>
+          <LinearGradient
+            colors={['#7C3AED', '#8B5CF6', '#A855F7']}
+            style={styles.welcomeAvatar}
+          >
+            <Image 
+              source={require('../../assets/images/logo.png')}
+              style={styles.welcomeAvatarImage}
+              resizeMode="contain"
+            />
+          </LinearGradient>
+          
+          <Text style={styles.welcomeTitle}>Hello! I&apos;m Dr. LYNX</Text>
+          <Text style={styles.welcomeSubtitle}>
+            Your intelligent health companion powered by advanced AI. I&apos;m here to provide personalized medical insights, wellness guidance, and health monitoring.
+          </Text>
+          
+          {/* Capabilities Preview */}
+          <View style={styles.capabilitiesContainer}>
+            <View style={styles.capabilityItem}>
+              <View style={[styles.capabilityIcon, { backgroundColor: '#7C3AED' }]}>
+                <Ionicons name="medical" size={16} color="#FFFFFF" />
+              </View>
+              <Text style={styles.capabilityText}>Symptom Analysis</Text>
+            </View>
+            <View style={styles.capabilityItem}>
+              <View style={[styles.capabilityIcon, { backgroundColor: '#8B5CF6' }]}>
+                <Ionicons name="fitness" size={16} color="#FFFFFF" />
+              </View>
+              <Text style={styles.capabilityText}>Wellness Guidance</Text>
+            </View>
+            <View style={styles.capabilityItem}>
+              <View style={[styles.capabilityIcon, { backgroundColor: '#A855F7' }]}>
+                <Ionicons name="shield-checkmark" size={16} color="#FFFFFF" />
+              </View>
+              <Text style={styles.capabilityText}>Health Monitoring</Text>
+            </View>
           </View>
         </View>
-      )}
 
-      {item.followUpSuggestions && item.followUpSuggestions.length > 0 && (
-        <View style={styles.followUpContainer}>
-          {item.followUpSuggestions.map((suggestion, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.followUpButton}
-              onPress={() => setInputText(suggestion)}
-            >
-              <Text style={styles.followUpText}>{suggestion}</Text>
-              <Ionicons name="chevron-forward" size={16} color={theme.colors.textSecondary} />
-            </TouchableOpacity>
-          ))}
+        {/* Quick Questions Grid */}
+        <View style={styles.quickQuestionsSection}>
+          <Text style={styles.quickQuestionsTitle}>Quick Health Topics</Text>
+          <View style={styles.quickQuestionsGrid}>
+            {QUICK_QUESTIONS.map((question, index) => (
+              <TouchableOpacity
+                key={question.id}
+                style={[styles.quickQuestionCard]}
+                onPress={() => handleQuickQuestion(question)}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[question.color, question.color + 'CC']}
+                  style={styles.quickQuestionGradient}
+                >
+                  <View style={styles.quickQuestionIcon}>
+                    <Ionicons name={question.icon} size={24} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.quickQuestionContent}>
+                    <Text style={styles.quickQuestionTitle}>{question.title}</Text>
+                    <Text style={styles.quickQuestionSubtitle}>{question.subtitle}</Text>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      )}
-    </View>
-  );
+      </Animated.View>
+    );
+  };
 
-  const renderQuickActions = () => (
-    <View style={styles.quickActionsContainer}>
-      <Text style={styles.quickActionsTitle}>How can I help you today?</Text>
-      <View style={styles.quickActionsGrid}>
-        {quickActionsData.map((action, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.quickActionCard}
-            onPress={() => handleQuickAction(action)}
-          >
-            <View style={styles.quickActionIcon}>
-              <Ionicons name={action.icon as any} size={24} color={theme.colors.primary} />
-            </View>
-            <Text style={styles.quickActionTitle}>{action.title}</Text>
-            <Text style={styles.quickActionDescription}>{action.description}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
+  const styles = createStyles(colors);
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={theme.colors.primary} />
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <LinearGradient
-        colors={theme.gradients.primary as [string, string]} 
-        style={styles.gradient}
+        colors={[colors.background, colors.backgroundSecondary]}
+        style={[styles.gradient, { paddingTop: insets.top }]}
       >
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        {/* Modern Header */}
+        <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.white} />
+            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           
           <View style={styles.headerCenter}>
-            <View style={styles.headerAvatar}>
-              <Ionicons name="medical" size={24} color={theme.colors.primary} />
+            <View style={styles.headerAvatarContainer}>
+              <Image 
+                source={require('../../assets/images/logo.png')}
+                style={styles.headerAvatarImage}
+                resizeMode="contain"
+              />
+              <View style={styles.statusIndicator} />
             </View>
-            <View>
+            <View style={styles.headerText}>
               <Text style={styles.headerTitle}>Dr. LYNX</Text>
-              <Text style={styles.headerSubtitle}>AI Health Assistant</Text>
+              <Text style={styles.headerSubtitle}>Always ready to help</Text>
             </View>
           </View>
-          
-          <TouchableOpacity style={styles.clearButton} onPress={clearChat}>
-            <Ionicons name="trash-outline" size={24} color={theme.colors.white} />
+
+          <TouchableOpacity style={styles.menuButton} onPress={clearChat}>
+            <Ionicons name="refresh-outline" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
         {/* Chat Area */}
-        <KeyboardAvoidingView 
-          style={styles.chatContainer}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <FlatList
-            ref={scrollViewRef}
-            data={messages}
-            renderItem={renderMessage}
-            keyExtractor={(item) => item.id}
-            style={styles.messagesList}
-            contentContainerStyle={styles.messagesContent}
-            showsVerticalScrollIndicator={false}
-            ListHeaderComponent={showQuickActions ? renderQuickActions() : null}
-            ListFooterComponent={
-              isTyping ? (
-                <View style={styles.typingIndicator}>
-                  <Text style={styles.typingText}>Dr. LYNX is typing...</Text>
-                </View>
-              ) : null
-            }
-          />
-        </KeyboardAvoidingView>
+        <View style={styles.chatContainer}>
+          {showWelcome ? (
+            renderWelcomeScreen()
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              renderItem={renderMessage}
+              keyExtractor={(item) => item.id}
+              style={styles.messagesList}
+              contentContainerStyle={styles.messagesContainer}
+              showsVerticalScrollIndicator={false}
+              ListFooterComponent={renderTypingIndicator}
+              onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            />
+          )}
+        </View>
 
-        {/* Input Area */}
-        <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 10 }]}>
+        {/* Enhanced Input Area */}
+        <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.textInput}
-              placeholder="Ask Dr. LYNX about your health..."
-              placeholderTextColor={theme.colors.textSecondary}
               value={inputText}
               onChangeText={setInputText}
+              placeholder="Ask me anything about your health..."
+              placeholderTextColor={colors.textSecondary}
               multiline
-              maxLength={500}
+              maxLength={1000}
             />
             <TouchableOpacity
               style={[
                 styles.sendButton,
-                !inputText.trim() && styles.sendButtonDisabled
+                { opacity: inputText.trim() ? 1 : 0.5 }
               ]}
-              onPress={sendMessage}
+              onPress={() => sendMessage()}
               disabled={!inputText.trim() || isTyping}
             >
-              <Ionicons 
-                name="send" 
-                size={20} 
-                color={!inputText.trim() ? theme.colors.textSecondary : theme.colors.white} 
-              />
+              <LinearGradient
+                colors={inputText.trim() ? ['#7C3AED', '#8B5CF6'] : [colors.textSecondary, colors.textSecondary]}
+                style={styles.sendButtonGradient}
+              >
+                <Ionicons 
+                  name={isTyping ? "hourglass" : "send"} 
+                  size={18} 
+                  color="#FFFFFF" 
+                />
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (colors: ColorPalette) => StyleSheet.create({
   container: {
     flex: 1,
   },
   gradient: {
     flex: 1,
   },
+  
+  // Modern Header Styles
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 16,
+    backgroundColor: colors.surface + '95',
+    backdropFilter: 'blur(10px)',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.backgroundSecondary + '40',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerCenter: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    marginLeft: 15,
+    marginLeft: 16,
   },
-  headerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  headerAvatarContainer: {
+    position: 'relative',
+    backgroundColor: '#7C3AED',
+    borderRadius: 22,
+    padding: 8,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  headerAvatarImage: {
+    width: 28,
+    height: 28,
+    tintColor: '#FFFFFF',
+  },
+  statusIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#10B981',
+    borderWidth: 3,
+    borderColor: colors.surface,
+  },
+  headerText: {
+    marginLeft: 12,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.white,
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: theme.colors.white,
-    opacity: 0.8,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+    fontWeight: '500',
   },
-  clearButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  menuButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
+  
+  // Chat Container
   chatContainer: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   messagesList: {
     flex: 1,
   },
-  messagesContent: {
+  messagesContainer: {
     padding: 20,
     paddingBottom: 10,
   },
-  quickActionsContainer: {
-    marginBottom: 20,
-  },
-  quickActionsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.white,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  quickActionsGrid: {
+  messageWrapper: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  quickActionCard: {
-    width: '48%',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  quickActionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  quickActionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.white,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  quickActionDescription: {
-    fontSize: 12,
-    color: theme.colors.white,
-    textAlign: 'center',
-    opacity: 0.8,
-  },
-  messageContainer: {
-    marginBottom: 16,
-  },
-  userMessage: {
+    marginBottom: 20,
     alignItems: 'flex-end',
   },
-  aiMessage: {
-    alignItems: 'flex-start',
+  userMessageWrapper: {
+    justifyContent: 'flex-end',
   },
-  aiHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+  aiMessageWrapper: {
+    justifyContent: 'flex-start',
   },
-  aiAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+  aiAvatarContainer: {
     marginRight: 10,
+    marginBottom: 8,
+    backgroundColor: '#7C3AED',
+    borderRadius: 16,
+    padding: 6,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  aiInfo: {
-    flex: 1,
-  },
-  aiName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.white,
-  },
-  timestamp: {
-    fontSize: 12,
-    color: theme.colors.white,
-    opacity: 0.7,
-  },
-  messageTypeIcon: {
-    marginLeft: 8,
+  aiAvatarImage: {
+    width: 20,
+    height: 20,
+    tintColor: '#FFFFFF',
   },
   messageBubble: {
-    maxWidth: '80%',
-    padding: 12,
-    borderRadius: 16,
+    maxWidth: '75%',
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  userBubble: {
-    backgroundColor: theme.colors.primary + '20',
-    borderBottomRightRadius: 4,
+  userMessage: {
+    backgroundColor: '#7C3AED',
+    borderBottomRightRadius: 6,
   },
-  aiBubble: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderBottomLeftRadius: 4,
-  },
-  emergencyBubble: {
-    borderWidth: 2,
-    borderColor: theme.colors.error,
+  aiMessage: {
+    backgroundColor: colors.surface,
+    borderBottomLeftRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.backgroundSecondary + '60',
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
+    fontWeight: '400',
   },
   userMessageText: {
-    color: theme.colors.white,
+    color: '#FFFFFF',
   },
   aiMessageText: {
-    color: theme.colors.white,
+    color: colors.textPrimary,
   },
-  emergencyText: {
-    fontWeight: '600',
+  messageTime: {
+    fontSize: 11,
+    marginTop: 6,
+    fontWeight: '500',
   },
-  userInfo: {
+  userMessageTime: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'right',
+  },
+  aiMessageTime: {
+    color: colors.textSecondary,
+  },
+  
+  // Typing Indicator
+  typingContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  typingBubble: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    borderBottomLeftRadius: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: colors.backgroundSecondary + '60',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  typingDots: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
   },
-  userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.primary,
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.textSecondary + '80',
+    marginHorizontal: 2,
+  },
+  dot1: {},
+  dot2: {},
+  dot3: {},
+  
+  // Welcome Screen
+  welcomeContainer: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+  },
+  welcomeHeader: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  welcomeAvatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
+    marginBottom: 32,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 10,
   },
-  followUpContainer: {
-    marginTop: 12,
-    marginLeft: 42,
+  welcomeAvatarImage: {
+    width: 60,
+    height: 60,
+    tintColor: '#FFFFFF',
   },
-  followUpButton: {
+  welcomeTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    marginBottom: 16,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 32,
+    fontWeight: '400',
+  },
+  capabilitiesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  capabilityItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  capabilityIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  capabilityText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  
+  // Quick Questions
+  quickQuestionsSection: {
+    flex: 1,
+  },
+  quickQuestionsTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 24,
+    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+  quickQuestionsGrid: {
+    flex: 1,
+    paddingHorizontal: 4,
+  },
+  quickQuestionCard: {
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+    width: width - 48, // Use the width variable
+  },
+  quickQuestionGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 20,
-    marginBottom: 6,
+    padding: 20,
+    minHeight: 80,
   },
-  followUpText: {
-    flex: 1,
-    fontSize: 14,
-    color: theme.colors.white,
-  },
-  typingIndicator: {
+  quickQuestionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 15,
+    marginRight: 16,
   },
-  typingText: {
-    fontSize: 14,
-    color: theme.colors.white,
-    opacity: 0.7,
-    fontStyle: 'italic',
+  quickQuestionContent: {
+    flex: 1,
   },
+  quickQuestionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    letterSpacing: 0.3,
+  },
+  quickQuestionSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
+    lineHeight: 18,
+  },
+  
+  // Input Area
   inputContainer: {
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 20,
+    backgroundColor: colors.surface + '95',
+    backdropFilter: 'blur(10px)',
+    borderTopWidth: 1,
+    borderTopColor: colors.backgroundSecondary + '40',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    backgroundColor: colors.background,
+    borderRadius: 28,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderWidth: 2,
+    borderColor: colors.backgroundSecondary + '60',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   textInput: {
     flex: 1,
     fontSize: 16,
-    color: theme.colors.textPrimary,
-    maxHeight: 80,
-    textAlignVertical: 'top',
+    color: colors.textPrimary,
+    maxHeight: 120,
+    paddingTop: 0,
+    paddingBottom: 0,
+    fontWeight: '400',
   },
   sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: theme.colors.primary,
+    marginLeft: 12,
+  },
+  sendButtonGradient: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  sendButtonDisabled: {
-    backgroundColor: theme.colors.surface,
+  
+  // Urgency indicator styles
+  urgencyBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  urgencyText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });

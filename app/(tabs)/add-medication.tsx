@@ -1,25 +1,25 @@
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  Platform,
-  StatusBar,
+    Alert,
+    Image,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { MedicationStorage } from '../../utils/MedicationStorage';
-import { EnhancedNotificationService, MedicationReminder } from '../../utils/EnhancedNotificationService';
-import { MEDICATION_COLORS } from '../../types';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
+import { MEDICATION_COLORS } from '../../types';
+import { EnhancedNotificationService, MedicationReminder } from '../../utils/EnhancedNotificationService';
+import { MedicationStorage } from '../../utils/MedicationStorage';
 
 const frequencies = ['Daily', 'Twice Daily', 'Three Times Daily', 'Four Times Daily', 'Weekly'];
 
@@ -125,6 +125,8 @@ export default function AddMedicationScreen() {
           dosage: medication.dosage,
           frequency: medication.frequency,
           times: medication.time,
+          time: medication.time[0], // First time for backward compatibility
+          daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // Daily by default
           startDate: new Date(),
           endDate: refillDate,
           instructions: `Take with ${frequency.toLowerCase()}`,
@@ -149,43 +151,49 @@ export default function AddMedicationScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar 
         barStyle={isDark ? "light-content" : "dark-content"} 
-        backgroundColor={theme.colors.primary} 
+        backgroundColor={theme.colors.background} 
       />
-      <LinearGradient 
-        colors={theme.gradients.primary as any} 
-        style={[styles.gradientContainer, { paddingTop: insets.top }]}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.textOnPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Add Medication</Text>
-          <TouchableOpacity onPress={saveMedication}>
-            <Text style={styles.saveButton}>Save</Text>
+      
+      {/* Header - CareHub Style */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitleRow}>
+            <Image
+              source={require('../../assets/images/logo.png')}
+              style={styles.headerLogo}
+              resizeMode="contain"
+            />
+            <Text style={styles.headerTitle}>Add Medication</Text>
+          </View>
+          <Text style={styles.headerSubtitle}>Track your medication schedule</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={saveMedication} style={styles.saveButton}>
+            <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         </View>
+      </View>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Medication Name */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Medication Name</Text>
-            <TextInput
-              style={styles.input}
-              value={medicationName}
-              onChangeText={setMedicationName}
-              placeholder="Enter medication name"
-              placeholderTextColor={theme.colors.textSecondary}
-            />
-          </View>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Medication Name */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Medication Name</Text>
+          <TextInput
+            style={styles.input}
+            value={medicationName}
+            onChangeText={setMedicationName}
+            placeholder="Enter medication name"
+            placeholderTextColor={theme.colors.textSecondary}
+          />
+        </View>
 
-          {/* Dosage */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Dosage</Text>
-            <TextInput
+        {/* Dosage */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Dosage</Text>
+          <TextInput
               style={styles.input}
               value={dosage}
               onChangeText={setDosage}
@@ -301,7 +309,6 @@ export default function AddMedicationScreen() {
             minimumDate={new Date()}
           />
         )}
-      </LinearGradient>
     </View>
   );
 }
@@ -309,33 +316,58 @@ export default function AddMedicationScreen() {
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.background,
   },
-  gradientContainer: {
-    flex: 1,
-  },
+  
+  // Header styles (CareHub style)
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
+    backgroundColor: theme.colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border || '#F0F0F0',
+  },
+  headerContent: {
+    flex: 1,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  headerLogo: {
+    width: 32,
+    height: 32,
+    marginRight: 12,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.colors.textOnPrimary,
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   saveButton: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.textOnPrimary,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
-    overflow: 'hidden',
+    borderRadius: 8,
   },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
   content: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -361,8 +393,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     fontSize: 16,
-    color: theme.colors.text,
-    backgroundColor: theme.colors.card,
+    color: theme.colors.textPrimary,
+    backgroundColor: theme.colors.card.background,
     fontWeight: '500',
   },
   frequencyContainer: {
@@ -373,7 +405,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card.background,
     marginRight: 12,
     borderWidth: 2,
     borderColor: theme.colors.border,
@@ -398,7 +430,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   timeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card.background,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
@@ -414,7 +446,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card.background,
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 16,

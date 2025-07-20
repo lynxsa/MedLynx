@@ -1,26 +1,25 @@
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  StatusBar
+    Alert,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import LanguageSelector from '../../components/LanguageSelector';
+import { StandardHeader } from '../../components/StandardHeader';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
-import LanguageSelector from '../../components/LanguageSelector';
 
 export default function ProfileScreen() {
   const { theme, isDark } = useTheme();
   const styles = useThemedStyles(createStyles);
-  const insets = useSafeAreaInsets();
   const [languageSelectorVisible, setLanguageSelectorVisible] = useState(false);
 
   const profileOptions = [
@@ -157,28 +156,33 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <StatusBar 
         barStyle={isDark ? "light-content" : "dark-content"} 
-        backgroundColor={theme.colors.primary} 
+        backgroundColor={theme.colors.background} 
       />
-      <LinearGradient 
-        colors={theme.gradients.primary as any} 
-        style={[styles.container, { paddingTop: insets.top }]}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.textOnPrimary} />
+      <StandardHeader
+        title="Profile"
+        showBackButton={true}
+        rightComponent={
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings' as any)}
+          >
+            <Ionicons name="settings-outline" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <View style={{ width: 24 }} />
-        </View>
-
+        }
+      />
+      
+      <LinearGradient 
+        colors={[theme.colors.primary + '15', theme.colors.background]} 
+        style={styles.gradientBackground}
+      >
         {/* Profile Info */}
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={40} color={theme.colors.textOnPrimary} />
           </View>
-          <Text style={styles.userName}>MedLYNX User</Text>
-          <Text style={styles.userEmail}>Stay healthy, stay on track</Text>
+          <Text style={styles.userName}>Derah Manyelo</Text>
+          <Text style={styles.userEmail}>derah@lynxconsulting.co.za</Text>
+          <Text style={styles.userPhone}>+27812814265</Text>
         </View>
 
         {/* Content */}
@@ -222,18 +226,6 @@ const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.colors.textOnPrimary,
-  },
   profileSection: {
     alignItems: 'center',
     paddingVertical: 32,
@@ -258,8 +250,14 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   userEmail: {
     fontSize: 16,
-    color: theme.colors.textOnPrimarySecondary,
+    color: theme.colors.textSecondary,
     fontWeight: '500',
+  },
+  userPhone: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    fontWeight: '400',
+    marginTop: 4,
   },
   content: {
     flex: 1,
@@ -278,13 +276,17 @@ const createStyles = (theme: any) => StyleSheet.create({
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.card.background,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    ...theme.shadows.medium,
+    shadowColor: theme.colors.shadow.medium,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   optionIcon: {
     width: 50,
@@ -294,7 +296,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
-    ...theme.shadows.small,
+    shadowColor: theme.colors.shadow.light,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   optionContent: {
     flex: 1,
@@ -302,7 +308,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   optionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: theme.colors.textPrimary,
     marginBottom: 4,
   },
   optionSubtitle: {
@@ -344,5 +350,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     marginBottom: 6,
     fontWeight: '500',
+  },
+  settingsButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  gradientBackground: {
+    flex: 1,
+    paddingTop: 20,
   },
 });

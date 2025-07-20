@@ -17,6 +17,9 @@
     "close": "Close",
     "confirm": "Confirm"
   },
+  "error": "An error occurred",
+  "cancel": "Cancel",
+  "save": "Save",
   "navigation": {
     "home": "Home",
     "appointments": "Appointments",
@@ -45,7 +48,8 @@
     "tomorrow": "Tomorrow",
     "yesterday": "Yesterday",
     "thisWeek": "This Week",
-    "nextWeek": "Next Week"
+    "nextWeek": "Next Week",
+    "weekDaysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   },
   "forms": {
     "required": "Required",
@@ -53,5 +57,6 @@
     "invalid": "Invalid",
     "pleaseEnter": "Please enter",
     "pleaseSelect": "Please select"
-  }
+  },
+  "locale": "en-US"
 }

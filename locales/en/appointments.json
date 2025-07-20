@@ -1,11 +1,13 @@
 {
   "titles": {
     "appointments": "Appointments",
+    "title": "Appointments",
     "newAppointment": "New Appointment",
     "editAppointment": "Edit Appointment",
     "upcomingAppointments": "Upcoming Appointments",
     "pastAppointments": "Past Appointments",
-    "appointmentDetails": "Appointment Details"
+    "appointmentDetails": "Appointment Details",
+    "calendarTitle": "Calendar"
   },
   "fields": {
     "doctorName": "Doctor Name",
@@ -40,15 +42,31 @@
     "deleteAppointment": "Delete Appointment",
     "rescheduleAppointment": "Reschedule Appointment",
     "cancelAppointment": "Cancel Appointment",
-    "markCompleted": "Mark as Completed"
+    "markCompleted": "Mark as Completed",
+    "addAppointmentTitle": "Add New Appointment"
+  },
+  "placeholders": {
+    "doctorNamePlaceholder": "Enter doctor's name",
+    "clinicNamePlaceholder": "Enter clinic name",
+    "reasonPlaceholder": "Reason for visit",
+    "notesPlaceholder": "Additional notes"
+  },
+  "labels": {
+    "dateLabel": "Date",
+    "timeLabel": "Time",
+    "selectDatePrompt": "Select a date",
+    "selectTimePrompt": "Select time"
   },
   "messages": {
     "noAppointments": "No appointments for this date",
+    "noAppointmentsOrMedications": "No appointments or medications for this date",
     "appointmentSaved": "Appointment saved successfully",
     "appointmentDeleted": "Appointment deleted successfully",
     "reminderSet": "Reminder set for this appointment",
     "fillRequiredFields": "Please fill in all required fields",
     "deleteConfirmation": "Are you sure you want to delete this appointment?",
+    "deleteAppointmentTitle": "Delete Appointment",
+    "deleteAppointmentConfirm": "Are you sure you want to delete this appointment?",
     "selectTime": "Select time",
     "selectDate": "Select date"
   },

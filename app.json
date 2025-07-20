@@ -4,20 +4,20 @@
     "slug": "medlynx",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.png",
     "scheme": "medlynx",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "description": "Your South African Health Companion - AI-powered medication management and health tracking.",
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#8B5CF6"
+      "backgroundColor": "#7C3AED"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.medlynx.app",
-      "backgroundColor": "#8B5CF6",
+      "backgroundColor": "#7C3AED",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "MedLynx uses the microphone for voice commands with Dr. LYNX AI assistant.",
         "NSLocationWhenInUseUsageDescription": "MedLynx uses location to find nearby health facilities and pharmacies.",
@@ -27,8 +27,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#8B5CF6"
+        "foregroundImage": "./assets/images/logo.png",
+        "backgroundColor": "#7C3AED"
       },
       "package": "com.medlynx.app",
       "permissions": [

@@ -119,8 +119,8 @@ const LYNX_COLORS = {
   NearBlack: "#1C1C1E", // For dark theme text or light theme primary text
   DarkerPurple: "#2A1B80", // Example darker shade for LYNXPurple
   LighterLavender: "#F7F5FF", // Even lighter for backgrounds
-  DarkBackground: "#120C27", // Deep purple for dark theme background
-  DarkSurface: "#1A1138",   // Slightly lighter for dark theme surfaces
+  DarkBackground: "#0A0518", // Much darker purple for dark theme background
+  DarkSurface: "#150C2E",   // Darker purple for dark theme surfaces
   DarkText: "#F0F0F0",      // Light text for dark backgrounds
   DarkTextSecondary: "#B0A8D9", // Muted light text
 };
@@ -137,21 +137,21 @@ export const LightThemeColors: ColorPalette = {
   LYNXHelio: LYNX_COLORS.LYNXHelio,
 
   // Semantic Mapping
-  primary: LYNX_COLORS.LYNXPurple,
-  primaryLight: LYNX_COLORS.LYNXLight,
-  primaryDark: LYNX_COLORS.DarkerPurple, // Or LYNX_COLORS.LYNXPurple
+  primary: "#7C3AED", // Modern purple primary
+  primaryLight: "#8B5CF6", // Light purple variant
+  primaryDark: "#5B21B6", // Dark purple variant
 
-  secondary: LYNX_COLORS.LYNXLight, // Or LYNX_COLORS.LYNXMauve
-  secondaryLight: LYNX_COLORS.LYNXLavender, // Adjust as needed
-  secondaryDark: LYNX_COLORS.LYNXPurple,   // Adjust as needed
+  secondary: "#A855F7", // Purple secondary
+  secondaryLight: "#C084FC", // Lighter purple
+  secondaryDark: "#9333EA", // Darker purple secondary
 
-  accent: LYNX_COLORS.LYNXMauve, // Or LYNX_COLORS.LYNXHelio
-  accentLight: "#F0D4FF", // Lighter Mauve
-  accentDark: "#D090EF",  // Darker Mauve
+  accent: "#DDD6FE", // Light purple accent
+  accentLight: "#EDE9FE", // Very light purple
+  accentDark: "#C4B5FD", // Medium purple accent
 
-  background: LYNX_COLORS.LYNXLightLavender, // Corrected typo // Very light
-  backgroundSecondary: LYNX_COLORS.LYNXLavender, // Slightly darker light
-  backgroundTertiary: LYNX_COLORS.PureWhite, // Or another very light shade
+  background: LYNX_COLORS.PureWhite, // Pure white background like CareHub
+  backgroundSecondary: LYNX_COLORS.LYNXLightLavender, // Very subtle lavender tint 
+  backgroundTertiary: LYNX_COLORS.LYNXLavender, // Slightly more tinted
   backgroundModal: LYNX_COLORS.PureWhite,
 
   surface: LYNX_COLORS.PureWhite, // Cards and surfaces
@@ -202,10 +202,10 @@ export const LightThemeColors: ColorPalette = {
 
   tabBar: {
     background: LYNX_COLORS.PureWhite, // Solid white tab bar
-    activeBackground: LYNX_COLORS.LYNXLightLavender, // Corrected typo // Subtle active bg
-    activeTint: LYNX_COLORS.LYNXPurple,
+    activeBackground: "#F3F4F6", // Light gray active background
+    activeTint: "#7C3AED", // Purple active tint
     inactiveTint: "#757575", // Medium gray
-    border: LYNX_COLORS.LYNXThistle,
+    border: "#A855F7", // Purple border
   },
 
   // Health-focused Colors (Harmonized with LYNX Palette)

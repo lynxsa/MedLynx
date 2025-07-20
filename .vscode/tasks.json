@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build and Run Enhanced MedLynx",
+			"type": "shell",
+			"command": "npx expo start",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [
+				"$expo"
+			],
+			"args": []
+		}
+	]
+}

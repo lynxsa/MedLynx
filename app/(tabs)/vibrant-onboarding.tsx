@@ -1,26 +1,26 @@
-import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  Alert,
-  Animated,
-  Image,
-  Dimensions,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useThemedStyles } from '../../hooks/useThemedStyles';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import React, { useRef, useState } from 'react';
+import {
+    Alert,
+    Animated,
+    Dimensions,
+    Image,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ThemedButton from '../../components/ThemedButton';
 import ThemedGlassCard from '../../components/ThemedGlassCard';
 import ThemedInput from '../../components/ThemedInput';
-import ThemedButton from '../../components/ThemedButton';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useThemedStyles } from '../../hooks/useThemedStyles';
 
 const { width } = Dimensions.get('window');
 
@@ -165,7 +165,7 @@ export default function OnboardingScreen() {
         [
           {
             text: 'Get Started',
-            onPress: () => router.replace('/enhanced-home' as any),
+            onPress: () => router.replace('/enhanced-home-clean' as any),
           },
         ]
       );
@@ -552,61 +552,63 @@ const createStyles = (theme: any, width: number) => StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 40,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
   },
   animationContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   logoImage: {
-    width: 100,
-    height: 40,
-    marginBottom: 20,
+    width: 80,
+    height: 32,
+    marginBottom: 16,
   },
   stepTitle: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: 'bold',
+    color: theme.colors.white,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  stepSubtitle: {
+    fontSize: 16,
+    fontWeight: '600',
     color: theme.colors.white,
     textAlign: 'center',
     marginBottom: 8,
   },
-  stepSubtitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.white,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
   stepDescription: {
-    fontSize: 16,
+    fontSize: 14,
     color: theme.colors.white,
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-    paddingHorizontal: 20,
+    lineHeight: 20,
+    marginBottom: 24,
+    paddingHorizontal: 16,
   },
   featuresList: {
     width: '100%',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
+    borderRadius: 10,
   },
   featureText: {
-    marginLeft: 12,
-    fontSize: 16,
+    marginLeft: 10,
+    fontSize: 14,
     color: theme.colors.white,
     fontWeight: '500',
+    flex: 1,
   },
   form: {
     width: '100%',

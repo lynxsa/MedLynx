@@ -1,28 +1,33 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native'; // Added ScrollView
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
-import Disclaimer from '../../components/Disclaimer'; // Import Disclaimer component
-import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Import for safe area
 
 export default function EnhancedHomeScreen() {
   const { theme } = useTheme();
-  const insets = useSafeAreaInsets(); // Get safe area insets
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView 
-        style={styles.scrollContainer}
-        contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom }]} // Add bottom padding for safe area
+        style={[styles.scrollView, { paddingTop: insets.top + 20 }]}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.text, { color: theme.colors.textPrimary }]}>
-          Welcome to MedLynx!
-        </Text>
-        <Text style={[styles.subText, { color: theme.colors.textSecondary }]}>
-          This is your enhanced home screen. More features coming soon!
-        </Text>
-        {/* Add more content here as needed */}
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
+            Enhanced Home
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+            Your health dashboard
+          </Text>
+        </View>
+        
+        <View style={styles.placeholder}>
+          <Text style={[styles.placeholderText, { color: theme.colors.textSecondary }]}>
+            Enhanced Home Dashboard Coming Soon
+          </Text>
+        </View>
       </ScrollView>
-      <Disclaimer />
     </View>
   );
 }
@@ -30,27 +35,35 @@ export default function EnhancedHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // justifyContent: 'center', // Removed to allow ScrollView to manage content
-    // alignItems: 'center', // Removed for ScrollView
   },
-  scrollContainer: {
+  scrollView: {
     flex: 1,
+    paddingHorizontal: 16,
   },
-  contentContainer: {
-    flexGrow: 1, // Ensures content can grow and be scrollable
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    opacity: 0.7,
+  },
+  placeholder: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 40,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: 12,
+    marginTop: 40,
   },
-  text: {
-    fontSize: 24, // Increased font size
-    fontWeight: 'bold',
+  placeholderText: {
+    fontSize: 18,
     textAlign: 'center',
-    marginBottom: 10,
-  },
-  subText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 20,
+    fontWeight: '500',
   },
 });
