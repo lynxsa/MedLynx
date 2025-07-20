@@ -42,15 +42,13 @@ export const StandardHeader: React.FC<StandardHeaderProps> = ({
       }
     ]}>
       <View style={styles.header}>
-        {showBackButton ? (
+        {showBackButton && (
           <TouchableOpacity 
             style={styles.backButton}
             onPress={handleBackPress}
           >
             <Ionicons name="arrow-back" size={24} color="#3726a6" />
           </TouchableOpacity>
-        ) : (
-          <View style={styles.placeholder} />
         )}
 
         <View style={styles.headerContent}>
@@ -75,9 +73,11 @@ export const StandardHeader: React.FC<StandardHeaderProps> = ({
           </View>
         </View>
 
-        <View style={styles.headerActions}>
-          {rightComponent || <View style={styles.placeholder} />}
-        </View>
+        {rightComponent && (
+          <View style={styles.headerActions}>
+            {rightComponent}
+          </View>
+        )}
       </View>
     </View>
   );
@@ -99,13 +99,13 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
   headerContent: {
     flex: 1,
+    alignItems: 'flex-start',
   },
   headerTitleRow: {
     flexDirection: 'row',
@@ -133,12 +133,12 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    position: 'absolute',
+    right: 20,
+    top: 12,
   },
   backButton: {
     padding: 8,
-  },
-  placeholder: {
-    width: 44,
-    height: 44,
+    marginRight: 8,
   },
 });
