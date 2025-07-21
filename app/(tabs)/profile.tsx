@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import LanguageSelector from '../../components/LanguageSelector';
 import { StandardHeader } from '../../components/StandardHeader';
+import { CURRENT_USER } from '../../constants/User';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
 
@@ -180,9 +181,9 @@ export default function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={40} color={theme.colors.textOnPrimary} />
           </View>
-          <Text style={styles.userName}>Derah Manyelo</Text>
-          <Text style={styles.userEmail}>derah@lynxconsulting.co.za</Text>
-          <Text style={styles.userPhone}>+27812814265</Text>
+          <Text style={styles.userName}>{CURRENT_USER.name}</Text>
+          <Text style={styles.userEmail}>{CURRENT_USER.email}</Text>
+          <Text style={styles.userPhone}>{CURRENT_USER.phone}</Text>
         </View>
 
         {/* Content */}

@@ -3,10 +3,12 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface StandardHeaderProps {
   title: string;
   subtitle?: string;
+  description?: string;
   showBackButton?: boolean;
   rightComponent?: React.ReactNode;
   showLogo?: boolean;
@@ -16,6 +18,7 @@ interface StandardHeaderProps {
 export const StandardHeader: React.FC<StandardHeaderProps> = ({
   title,
   subtitle,
+  description,
   showBackButton = false,
   rightComponent,
   showLogo = false,
@@ -23,6 +26,7 @@ export const StandardHeader: React.FC<StandardHeaderProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { theme } = useTheme();
 
   const handleBackPress = () => {
     if (onBackPress) {
@@ -32,13 +36,30 @@ export const StandardHeader: React.FC<StandardHeaderProps> = ({
     }
   };
 
+  const dynamicStyles = {
+    container: {
+      backgroundColor: theme.colors.surface,
+    },
+    headerTitle: {
+      color: theme.mode === 'dark' ? '#FFFFFF' : '#4C1D95',
+    },
+    headerSubtitle: {
+      color: theme.mode === 'dark' ? '#CCCCCC' : theme.colors.textSecondary,
+    },
+    headerDescription: {
+      color: theme.mode === 'dark' ? '#AAAAAA' : theme.colors.textSecondary,
+    },
+    backButtonIcon: {
+      color: theme.mode === 'dark' ? '#FFFFFF' : theme.colors.primary,
+    },
+  };
+
   return (
     <View style={[
       styles.container, 
+      dynamicStyles.container,
       { 
         paddingTop: insets.top + 12,
-        backgroundColor: '#FFFFFF',
-        borderBottomColor: '#F0F0F0',
       }
     ]}>
       <View style={styles.header}>
@@ -47,7 +68,7 @@ export const StandardHeader: React.FC<StandardHeaderProps> = ({
             style={styles.backButton}
             onPress={handleBackPress}
           >
-            <Ionicons name="arrow-back" size={24} color="#3726a6" />
+            <Ionicons name="arrow-back" size={24} color={dynamicStyles.backButtonIcon.color} />
           </TouchableOpacity>
         )}
 
@@ -61,14 +82,18 @@ export const StandardHeader: React.FC<StandardHeaderProps> = ({
               />
             )}
             <View style={styles.textContainer}>
-              {subtitle && (
-                <Text style={styles.headerSubtitle}>
-                  {subtitle}
-                </Text>
-              )}
-              <Text style={styles.headerTitle}>
+              <Text style={[styles.headerTitle, dynamicStyles.headerTitle]}>
                 {title}
               </Text>
+              {description && (
+                <Text 
+                  style={[styles.headerDescription, dynamicStyles.headerDescription]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {description}
+                </Text>
+              )}
             </View>
           </View>
         </View>
@@ -83,9 +108,9 @@ export const StandardHeader: React.FC<StandardHeaderProps> = ({
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
-    borderBottomWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -121,14 +146,17 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#3726a6',
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#a096e7',
     marginBottom: 2,
+  },
+  headerDescription: {
+    fontSize: 9,
+    marginTop: 2,
+    opacity: 0.7,
   },
   headerActions: {
     flexDirection: 'row',
@@ -142,3 +170,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
 });
+
+
+  

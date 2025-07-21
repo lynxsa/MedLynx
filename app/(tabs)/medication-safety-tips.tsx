@@ -57,7 +57,7 @@ export default function MedicationSafetyTipsScreen() {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Why Medication Safety Matters</Text>
             <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-              Taking medications correctly is crucial for your health and safety. Proper medication management can mean the difference between effective treatment and serious complications. Here's everything you need to know about using medications safely.
+              Taking medications correctly is crucial for your health and safety. Proper medication management can mean the difference between effective treatment and serious complications. Here&apos;s everything you need to know about using medications safely.
             </Text>
           </View>
 
@@ -161,7 +161,7 @@ export default function MedicationSafetyTipsScreen() {
                 <Ionicons name="lock-closed" size={24} color="#8B5CF6" />
                 <Text style={[styles.storageTitle, { color: colors.text }]}>Child Safety</Text>
                 <Text style={[styles.storageText, { color: colors.textSecondary }]}>
-                  Use child-resistant caps and store out of children's reach
+                  Use child-resistant caps and store out of children&apos;s reach
                 </Text>
               </View>
             </View>
@@ -218,7 +218,7 @@ export default function MedicationSafetyTipsScreen() {
                 <View style={styles.interactionItem}>
                   <Ionicons name="medical" size={16} color="#3726a6" />
                   <Text style={[styles.interactionText, { color: colors.textSecondary }]}>
-                    All prescription medications you're taking
+                    All prescription medications you&apos;re taking
                   </Text>
                 </View>
                 

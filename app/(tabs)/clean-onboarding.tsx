@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Dimensions,
     Platform,
     SafeAreaView,
     StatusBar,
@@ -18,8 +17,6 @@ import Animated, {
     SlideInRight,
     ZoomIn,
 } from 'react-native-reanimated';
-
-const { width } = Dimensions.get('window');
 
 interface OnboardingSlide {
   id: number;

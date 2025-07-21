@@ -10,6 +10,7 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
+    StatusBar,
     StyleSheet,
     Text,
     TextInput,
@@ -455,6 +456,10 @@ export default function DrLynxScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <StatusBar 
+        barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} 
+        backgroundColor={colors.background}
+      />
       <LinearGradient
         colors={[colors.background, colors.backgroundSecondary]}
         style={[styles.gradient, { paddingTop: 0 }]}
@@ -462,12 +467,12 @@ export default function DrLynxScreen() {
         {/* Standard Header */}
         <StandardHeader 
           title="Dr. LYNX"
-          subtitle="Always ready to help"
-          showBackButton={true}
+          description="24/7 AI health assistant"
+          showBackButton={false}
           showLogo={true}
           rightComponent={
             <TouchableOpacity onPress={clearChat}>
-              <Ionicons name="refresh-outline" size={20} color="#3726a6" />
+              <Ionicons name="refresh-outline" size={20} color={theme.mode === 'dark' ? '#FFFFFF' : '#3726a6'} />
             </TouchableOpacity>
           }
         />

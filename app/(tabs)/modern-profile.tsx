@@ -7,6 +7,7 @@ import {
     Image,
     SafeAreaView,
     ScrollView,
+    StatusBar,
     StyleSheet,
     Switch,
     Text,
@@ -18,7 +19,6 @@ import Animated, {
     FadeInDown,
     SlideInRight,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ColorPalette } from '../../constants/DynamicTheme';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -35,7 +35,6 @@ interface ProfileOption {
 
 export default function ModernProfileScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { theme, toggleTheme } = useTheme();
   const colors = theme.colors as ColorPalette;
   
@@ -236,6 +235,10 @@ export default function ModernProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar 
+        barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} 
+        backgroundColor={colors.background}
+      />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <Animated.View entering={FadeIn.delay(100)} style={styles.header}>

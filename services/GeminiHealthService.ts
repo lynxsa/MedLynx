@@ -17,7 +17,7 @@ export interface GeminiResponse {
 
 class GeminiHealthService {
   private apiKey: string;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
   private conversationHistory: GeminiMessage[] = [];
   private maxHistoryLength = 10;
 
@@ -60,6 +60,64 @@ Remember: You're helping users in South Africa, so reference local emergency num
   }
 
   /**
+   * Provide a fallback response when API is unavailable
+   */
+  private getFallbackResponse(userMessage: string): GeminiResponse {
+    const urgency = this.analyzeUrgency(userMessage);
+    
+    if (urgency === 'emergency') {
+      return {
+        text: "⚠️ For immediate medical emergencies, please contact emergency services at 10177 or go to your nearest emergency room. Do not wait for online assistance.",
+        type: 'emergency',
+        confidence: 1.0,
+        urgency: 'emergency',
+        sources: ['MedLynx Emergency Protocol']
+      };
+    }
+
+    return {
+      text: "I'm currently experiencing technical difficulties, but I'm here to help! 🩺\n\nFor health concerns, please consider:\n• Consulting your regular healthcare provider\n• Visiting a nearby clinic or pharmacy\n• Calling a medical helpline\n• For emergencies, contact 10177\n\nI'll be back online soon to provide better assistance!",
+      type: 'general',
+      confidence: 0.5,
+      urgency: 'low',
+      sources: ['MedLynx Fallback System'],
+      followUp: [
+        "Would you like information about nearby healthcare facilities?",
+        "Do you need emergency contact numbers?",
+        "Can I help you find a pharmacy or clinic?"
+      ]
+    };
+  }
+
+  /**
+   * Test API connection with a simple request
+   */
+  async testConnection(): Promise<boolean> {
+    try {
+      const testBody = {
+        contents: [{
+          parts: [{ text: "Hello, are you working?" }]
+        }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 100
+        }
+      };
+
+      const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testBody),
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      return false;
+    }
+  }
+
+  /**
    * Send message to Gemini API with context and medical safety
    */
   async sendMessage(userMessage: string): Promise<GeminiResponse> {
@@ -93,8 +151,16 @@ Remember: You're helping users in South Africa, so reference local emergency num
         },
         safetySettings: [
           {
-            category: "HARM_CATEGORY_MEDICAL",
-            threshold: "BLOCK_LOW_AND_ABOVE"
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
           },
           {
             category: "HARM_CATEGORY_DANGEROUS_CONTENT", 
@@ -112,7 +178,13 @@ Remember: You're helping users in South Africa, so reference local emergency num
       });
 
       if (!response.ok) {
-        throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+        const errorData = await response.text();
+        console.error('Gemini API Error Details:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorData
+        });
+        throw new Error(`Gemini API error: ${response.status} - ${errorData}`);
       }
 
       const data = await response.json();
@@ -140,18 +212,11 @@ Remember: You're helping users in South Africa, so reference local emergency num
         followUp: this.generateFollowUpQuestions(userMessage, responseType)
       };
 
-    } catch (error) {
-      console.error('Gemini API Error:', error);
+    } catch {
+      console.log('Using fallback response due to API unavailability');
       
-      // Fallback to basic response for API failures
-      return {
-        text: "I apologize, but I'm experiencing technical difficulties connecting to my knowledge base. For immediate health concerns, please contact your healthcare provider or call emergency services at 10177 if urgent.",
-        type: 'general',
-        confidence: 0.5,
-        urgency: 'medium',
-        sources: ['Fallback Response'],
-        followUp: ['Would you like me to try again?', 'Do you need emergency contact information?']
-      };
+      // Return graceful fallback instead of showing error
+      return this.getFallbackResponse(userMessage);
     }
   }
 

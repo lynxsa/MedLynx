@@ -1,308 +1,872 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StandardHeader } from '../../components/StandardHeader';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useThemedStyles } from '../../hooks/useThemedStyles';
 
-interface BMIReading {
-  id: string;
-  bmi: number;
-  category: string;
-  height: number;
-  weight: number;
-  date: Date;
-  trend?: 'improving' | 'stable' | 'concerning';
-}
+const { width } = Dimensions.get('window');
 
 interface HealthMetric {
   id: string;
-  type: 'bloodPressure' | 'bloodSugar' | 'heartRate' | 'weight' | 'steps' | 'sleep';
+  type: 'bloodPressure' | 'bloodSugar' | 'heartRate' | 'weight' | 'steps' | 'sleep' | 'water' | 'bmi' | 'temperature' | 'oxygen';
   value: string;
-  date: Date;
-  notes?: string;
-  aiInsight?: string;
-  status?: 'normal' | 'elevated' | 'high' | 'low';
+  unit: string;
+  status: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
+  trend: 'up' | 'down' | 'stable';
+  target?: string;
 }
 
-interface HealthTrend {
+interface HealthGoal {
+  id: string;
   metric: string;
-  direction: 'up' | 'down' | 'stable';
-  percentage: number;
-  period: string;
-  recommendation: string;
+  current: number;
+  target: number;
+  unit: string;
+  progress: number;
+  icon: string;
+  color: string;
 }
 
-interface SmartInsight {
-  type: 'achievement' | 'concern' | 'recommendation' | 'trend';
+interface HealthInsight {
+  id: string;
+  type: 'achievement' | 'warning' | 'tip' | 'reminder';
   title: string;
   description: string;
+  priority: 'high' | 'medium' | 'low';
   actionable: boolean;
-  priority: 'low' | 'medium' | 'high';
 }
 
 export default function HealthMetricsScreen() {
   const { theme, isDark } = useTheme();
-  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'vitals' | 'goals' | 'history'>('overview');
+  const [healthScore] = useState(78);
   
-  // Enhanced state for intelligent health tracking
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
-  const [heightUnit, setHeightUnit] = useState<'cm' | 'ft'>('cm');
-  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg');
-  const [currentBMI, setCurrentBMI] = useState<number | null>(null);
-  const [bmiHistory, setBMIHistory] = useState<BMIReading[]>([]);
-  const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([]);
-  const [bmiCategory, setBMICategory] = useState<string>('');
-  const [healthTrends, setHealthTrends] = useState<HealthTrend[]>([]);
-  const [smartInsights, setSmartInsights] = useState<SmartInsight[]>([]);
-  const [healthScore, setHealthScore] = useState<number>(0);
-  const [weeklyGoals, setWeeklyGoals] = useState({
-    steps: 10000,
-    weight: 'maintain',
-    bloodPressure: 'monitor',
-    sleep: 8
-  });
+  // Sample comprehensive health data - matches home page data
+  const [metrics] = useState<HealthMetric[]>([
+    {
+      id: '1',
+      type: 'heartRate',
+      value: '72',
+      unit: 'BPM',
+      status: 'good',
+      trend: 'stable',
+      target: '60-100 BPM',
+    },
+    {
+      id: '2',
+      type: 'bloodPressure',
+      value: '118/76',
+      unit: 'mmHg',
+      status: 'excellent',
+      trend: 'down',
+      target: '<120/80 mmHg',
+    },
+    {
+      id: '3',
+      type: 'steps',
+      value: '8,247',
+      unit: 'steps',
+      status: 'good',
+      trend: 'up',
+      target: '10,000 steps',
+    },
+    {
+      id: '4',
+      type: 'sleep',
+      value: '7.5',
+      unit: 'hours',
+      status: 'good',
+      trend: 'stable',
+      target: '7-9 hours',
+    },
+    {
+      id: '5',
+      type: 'water',
+      value: '6',
+      unit: 'glasses',
+      status: 'fair',
+      trend: 'up',
+      target: '8 glasses',
+    },
+    {
+      id: '6',
+      type: 'weight',
+      value: '68.5',
+      unit: 'kg',
+      status: 'good',
+      trend: 'stable',
+      target: '65-70 kg',
+    },
+    {
+      id: '7',
+      type: 'bmi',
+      value: '22.4',
+      unit: '',
+      status: 'excellent',
+      trend: 'stable',
+      target: '18.5-24.9',
+    },
+    {
+      id: '8',
+      type: 'bloodSugar',
+      value: '95',
+      unit: 'mg/dL',
+      status: 'excellent',
+      trend: 'stable',
+      target: '70-100 mg/dL',
+    },
+    {
+      id: '9',
+      type: 'temperature',
+      value: '36.7',
+      unit: '°C',
+      status: 'good',
+      trend: 'stable',
+      target: '36.1-37.2°C',
+    },
+    {
+      id: '10',
+      type: 'oxygen',
+      value: '98',
+      unit: '%',
+      status: 'excellent',
+      trend: 'stable',
+      target: '>95%',
+    },
+  ]);
 
-  useEffect(() => {
-    loadBMIHistory();
-    loadHealthMetrics();
-  }, []);
+  const [goals] = useState<HealthGoal[]>([
+    {
+      id: '1',
+      metric: 'Daily Steps',
+      current: 8247,
+      target: 10000,
+      unit: 'steps',
+      progress: 82,
+      icon: 'walk',
+      color: '#7C3AED',
+    },
+    {
+      id: '2',
+      metric: 'Water Intake',
+      current: 6,
+      target: 8,
+      unit: 'glasses',
+      progress: 75,
+      icon: 'water',
+      color: '#06B6D4',
+    },
+    {
+      id: '3',
+      metric: 'Sleep Duration',
+      current: 7.5,
+      target: 8,
+      unit: 'hours',
+      progress: 94,
+      icon: 'bed',
+      color: '#8B5CF6',
+    },
+    {
+      id: '4',
+      metric: 'Weight Goal',
+      current: 68.5,
+      target: 67,
+      unit: 'kg',
+      progress: 78,
+      icon: 'fitness',
+      color: '#F59E0B',
+    },
+  ]);
 
-  const loadBMIHistory = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('bmiHistory');
-      if (stored) {
-        const history = JSON.parse(stored);
-        setBMIHistory(history.map((reading: any) => ({
-          ...reading,
-          date: new Date(reading.date)
-        })));
-      }
-    } catch (error) {
-      console.error('Error loading BMI history:', error);
-    }
-  };
+  const [insights] = useState<HealthInsight[]>([
+    {
+      id: '1',
+      type: 'achievement',
+      title: 'Great Blood Pressure!',
+      description: 'Your blood pressure has been consistently in the optimal range for the past week.',
+      priority: 'high',
+      actionable: false,
+    },
+    {
+      id: '2',
+      type: 'tip',
+      title: 'Stay Hydrated',
+      description: 'You\'re 2 glasses short of your daily water goal. Try setting reminders throughout the day.',
+      priority: 'medium',
+      actionable: true,
+    },
+    {
+      id: '3',
+      type: 'reminder',
+      title: 'Step Goal Progress',
+      description: 'You\'re 82% to your step goal today. A 20-minute walk would help you reach it!',
+      priority: 'medium',
+      actionable: true,
+    },
+    {
+      id: '4',
+      type: 'warning',
+      title: 'Medication Reminder',
+      description: 'Don\'t forget to take your evening medication at 8 PM.',
+      priority: 'high',
+      actionable: true,
+    },
+  ]);
 
-  const loadHealthMetrics = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('healthMetrics');
-      if (stored) {
-        const metrics = JSON.parse(stored);
-        setHealthMetrics(metrics.map((metric: any) => ({
-          ...metric,
-          date: new Date(metric.date)
-        })));
-      }
-    } catch (error) {
-      console.error('Error loading health metrics:', error);
-    }
-  };
-
-  const saveBMIReading = async (reading: BMIReading) => {
-    try {
-      const updatedHistory = [reading, ...bmiHistory].slice(0, 10); // Keep last 10 readings
-      setBMIHistory(updatedHistory);
-      await AsyncStorage.setItem('bmiHistory', JSON.stringify(updatedHistory));
-    } catch (error) {
-      console.error('Error saving BMI reading:', error);
-    }
-  };
-
-  const calculateBMI = () => {
-    const heightValue = parseFloat(height);
-    const weightValue = parseFloat(weight);
-
-    if (!heightValue || !weightValue || heightValue <= 0 || weightValue <= 0) {
-      Alert.alert('Error', 'Please enter valid height and weight values');
-      return;
-    }
-
-    // Convert to metric if needed
-    let heightInMeters = heightValue;
-    let weightInKg = weightValue;
-
-    if (heightUnit === 'ft') {
-      heightInMeters = heightValue * 0.3048; // feet to meters
-    } else {
-      heightInMeters = heightValue / 100; // cm to meters
-    }
-
-    if (weightUnit === 'lbs') {
-      weightInKg = weightValue * 0.453592; // lbs to kg
-    }
-
-    const bmi = weightInKg / (heightInMeters * heightInMeters);
-    const category = getBMICategory(bmi);
-
-    setCurrentBMI(parseFloat(bmi.toFixed(1)));
-    setBMICategory(category);
-
-    // Save reading
-    const reading: BMIReading = {
-      id: Date.now().toString(),
-      bmi: parseFloat(bmi.toFixed(1)),
-      category,
-      height: heightUnit === 'cm' ? heightValue : heightValue * 30.48,
-      weight: weightUnit === 'kg' ? weightValue : weightValue * 0.453592,
-      date: new Date(),
+  const getMetricIcon = (type: string) => {
+    const icons: { [key: string]: string } = {
+      heartRate: 'heart',
+      bloodPressure: 'medical',
+      bloodSugar: 'water',
+      weight: 'scale',
+      steps: 'walk',
+      sleep: 'bed',
+      water: 'water',
+      bmi: 'fitness',
+      temperature: 'thermometer',
+      oxygen: 'medical',
     };
-
-    saveBMIReading(reading);
+    return icons[type] || 'analytics';
   };
 
-  const getBMICategory = (bmi: number): string => {
-    if (bmi < 18.5) return 'Underweight';
-    if (bmi >= 18.5 && bmi < 25) return 'Normal Weight';
-    if (bmi >= 25 && bmi < 30) return 'Overweight';
-    return 'Obese';
-  };
-
-  const getBMICategoryColor = (category: string) => {
-    switch (category) {
-      case 'Underweight':
-        return theme.colors.info;
-      case 'Normal Weight':
-        return theme.colors.success;
-      case 'Overweight':
-        return theme.colors.warning;
-      case 'Obese':
-        return theme.colors.error;
-      default:
-        return theme.colors.textSecondary;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'excellent': return '#10B981';
+      case 'good': return '#3B82F6';
+      case 'fair': return '#F59E0B';
+      case 'poor': return '#EF4444';
+      case 'critical': return '#DC2626';
+      default: return theme.colors.textSecondary;
     }
   };
 
-  const getBMIAdvice = (category: string) => {
-    switch (category) {
-      case 'Underweight':
-        return 'Consider consulting a healthcare provider about healthy weight gain strategies. Focus on nutrient-rich foods and strength training.';
-      case 'Normal Weight':
-        return 'Great job! Maintain your healthy weight through balanced nutrition and regular physical activity.';
-      case 'Overweight':
-        return 'Consider gradual weight loss through a combination of healthy eating and increased physical activity. Consult a healthcare provider for guidance.';
-      case 'Obese':
-        return 'It\'s recommended to consult with a healthcare provider for a comprehensive weight management plan that includes diet, exercise, and possibly medical support.';
-      default:
-        return '';
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'up': return 'trending-up';
+      case 'down': return 'trending-down';
+      default: return 'remove';
     }
   };
 
-  const renderBMIResult = () => {
-    if (!currentBMI) return null;
-
-    return (
-      <View style={styles.resultContainer}>
-        <View style={styles.bmiResult}>
-          <Text style={styles.bmiTitle}>Your BMI</Text>
-          <Text style={styles.bmiValue}>{currentBMI}</Text>
-          <View style={[styles.categoryBadge, { backgroundColor: getBMICategoryColor(bmiCategory) }]}>
-            <Text style={styles.categoryText}>{bmiCategory}</Text>
-          </View>
-        </View>
-
-        <View style={styles.bmiAdvice}>
-          <Text style={styles.adviceTitle}>Recommendation</Text>
-          <Text style={styles.adviceText}>{getBMIAdvice(bmiCategory)}</Text>
-        </View>
-
-        <View style={styles.bmiScale}>
-          <Text style={styles.scaleTitle}>BMI Scale</Text>
-          <View style={styles.scaleItems}>
-            <View style={styles.scaleItem}>
-              <View style={[styles.scaleColor, { backgroundColor: theme.colors.info }]} />
-              <Text style={styles.scaleText}>Under 18.5 - Underweight</Text>
-            </View>
-            <View style={styles.scaleItem}>
-              <View style={[styles.scaleColor, { backgroundColor: theme.colors.success }]} />
-              <Text style={styles.scaleText}>18.5-24.9 - Normal</Text>
-            </View>
-            <View style={styles.scaleItem}>
-              <View style={[styles.scaleColor, { backgroundColor: theme.colors.warning }]} />
-              <Text style={styles.scaleText}>25.0-29.9 - Overweight</Text>
-            </View>
-            <View style={styles.scaleItem}>
-              <View style={[styles.scaleColor, { backgroundColor: theme.colors.error }]} />
-              <Text style={styles.scaleText}>30.0+ - Obese</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    );
+  const getTrendColor = (trend: string) => {
+    if (trend === 'stable') return '#6B7280';
+    if (trend === 'up') return '#10B981';
+    if (trend === 'down') return '#EF4444';
+    return '#6B7280';
   };
 
-  const renderBMIHistory = () => {
-    if (bmiHistory.length === 0) return null;
+  const renderHealthScore = () => (
+    <Animated.View entering={FadeInDown.delay(100)} style={styles.healthScoreCard}>
+      <LinearGradient
+        colors={['#7C3AED', '#A855F7']}
+        style={styles.scoreGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View style={styles.scoreContent}>
+          <Text style={styles.scoreLabel}>Your Health Score</Text>
+          <Text style={styles.scoreValue}>{healthScore}</Text>
+          <Text style={styles.scoreSubtitle}>Good - Keep it up!</Text>
+        </View>
+        <View style={styles.scoreIcon}>
+          <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.8)" />
+        </View>
+      </LinearGradient>
+    </Animated.View>
+  );
 
-    return (
-      <View style={styles.historyContainer}>
-        <Text style={styles.historyTitle}>BMI History</Text>
-        {bmiHistory.slice(0, 5).map((reading) => (
-          <View key={reading.id} style={styles.historyItem}>
-            <View style={styles.historyInfo}>
-              <Text style={styles.historyBMI}>{reading.bmi}</Text>
-              <Text style={styles.historyCategory}>{reading.category}</Text>
-              <Text style={styles.historyDate}>
-                {reading.date.toLocaleDateString()}
-              </Text>
+  const renderQuickStats = () => (
+    <Animated.View entering={FadeInDown.delay(200)} style={styles.quickStatsContainer}>
+      <Text style={styles.sectionTitle}>Quick Overview</Text>
+      <View style={styles.statsGrid}>
+        {metrics.slice(0, 6).map((metric, index) => (
+          <Animated.View
+            key={metric.id}
+            entering={FadeInRight.delay(100 * index)}
+            style={styles.statCard}
+          >
+            <View style={styles.statHeader}>
+              <View style={[styles.statIcon, { backgroundColor: getStatusColor(metric.status) + '20' }]}>
+                <Ionicons 
+                  name={getMetricIcon(metric.type) as any} 
+                  size={18} 
+                  color={getStatusColor(metric.status)} 
+                />
+              </View>
+              <Ionicons 
+                name={getTrendIcon(metric.trend) as any} 
+                size={14} 
+                color={getTrendColor(metric.trend)} 
+              />
             </View>
-            <View style={[
-              styles.historyIndicator,
-              { backgroundColor: getBMICategoryColor(reading.category) }
-            ]} />
-          </View>
+            <Text style={styles.statValue}>{metric.value}</Text>
+            <Text style={styles.statUnit}>{metric.unit}</Text>
+            <Text style={styles.statType} numberOfLines={1}>
+              {metric.type.charAt(0).toUpperCase() + metric.type.slice(1).replace(/([A-Z])/g, ' $1')}
+            </Text>
+          </Animated.View>
         ))}
       </View>
-    );
-  };
+    </Animated.View>
+  );
 
-  const renderHealthMetrics = () => {
-    if (healthMetrics.length === 0) return null;
-
-    return (
-      <View style={styles.historyContainer}>
-        <Text style={styles.historyTitle}>Other Health Metrics</Text>
-        {healthMetrics.slice(0, 10).map((metric) => (
-          <View key={metric.id} style={styles.historyItem}>
-            <View style={styles.historyInfo}>
-              <Text style={styles.historyBMI}>{metric.value}</Text>
-              <Text style={styles.historyCategory}>
-                {metric.type === 'bloodPressure' ? 'Blood Pressure' : 
-                 metric.type === 'bloodSugar' ? 'Blood Sugar' : 'Heart Rate'}
-              </Text>
-              <Text style={styles.historyDate}>
-                {metric.date.toLocaleDateString()}
-              </Text>
-              {metric.notes && (
-                <Text style={styles.historyDate}>{metric.notes}</Text>
-              )}
+  const renderDetailedMetrics = () => (
+    <Animated.View entering={FadeInDown.delay(300)} style={styles.detailedMetricsContainer}>
+      <Text style={styles.sectionTitle}>All Health Metrics</Text>
+      {metrics.map((metric, index) => (
+        <Animated.View
+          key={metric.id}
+          entering={FadeInDown.delay(50 * index)}
+          style={styles.metricCard}
+        >
+          <View style={styles.metricHeader}>
+            <View style={styles.metricInfo}>
+              <View style={[styles.metricIcon, { backgroundColor: getStatusColor(metric.status) + '20' }]}>
+                <Ionicons 
+                  name={getMetricIcon(metric.type) as any} 
+                  size={20} 
+                  color={getStatusColor(metric.status)} 
+                />
+              </View>
+              <View style={styles.metricText}>
+                <Text style={styles.metricName}>
+                  {metric.type.charAt(0).toUpperCase() + metric.type.slice(1).replace(/([A-Z])/g, ' $1')}
+                </Text>
+                <Text style={styles.metricTarget}>Target: {metric.target}</Text>
+              </View>
             </View>
+            <View style={styles.metricValue}>
+              <Text style={styles.metricValueText}>{metric.value}</Text>
+              <Text style={styles.metricUnitText}>{metric.unit}</Text>
+            </View>
+          </View>
+          <View style={styles.metricFooter}>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(metric.status) }]}>
+              <Text style={styles.statusText}>{metric.status}</Text>
+            </View>
+            <View style={styles.trendContainer}>
+              <Ionicons 
+                name={getTrendIcon(metric.trend) as any} 
+                size={14} 
+                color={getTrendColor(metric.trend)} 
+              />
+              <Text style={[styles.trendText, { color: getTrendColor(metric.trend) }]}>
+                {metric.trend}
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+      ))}
+    </Animated.View>
+  );
+
+  const renderGoals = () => (
+    <Animated.View entering={FadeInDown.delay(300)} style={styles.goalsContainer}>
+      <Text style={styles.sectionTitle}>Health Goals</Text>
+      {goals.map((goal, index) => (
+        <Animated.View
+          key={goal.id}
+          entering={FadeInDown.delay(50 * index)}
+          style={styles.goalCard}
+        >
+          <View style={styles.goalHeader}>
+            <View style={[styles.goalIcon, { backgroundColor: goal.color + '20' }]}>
+              <Ionicons name={goal.icon as any} size={20} color={goal.color} />
+            </View>
+            <View style={styles.goalInfo}>
+              <Text style={styles.goalName}>{goal.metric}</Text>
+              <Text style={styles.goalProgress}>
+                {goal.current} / {goal.target} {goal.unit}
+              </Text>
+            </View>
+            <Text style={styles.goalPercentage}>{goal.progress}%</Text>
+          </View>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill, 
+                { width: `${goal.progress}%`, backgroundColor: goal.color }
+              ]} 
+            />
+          </View>
+        </Animated.View>
+      ))}
+    </Animated.View>
+  );
+
+  const renderInsights = () => (
+    <Animated.View entering={FadeInDown.delay(400)} style={styles.insightsContainer}>
+      <Text style={styles.sectionTitle}>Health Insights</Text>
+      {insights.map((insight, index) => (
+        <Animated.View
+          key={insight.id}
+          entering={FadeInDown.delay(50 * index)}
+          style={styles.insightCard}
+        >
+          <View style={styles.insightHeader}>
             <View style={[
-              styles.historyIndicator,
+              styles.insightIcon,
               { backgroundColor: 
-                metric.type === 'bloodPressure' ? theme.colors.healthRed :
-                metric.type === 'bloodSugar' ? theme.colors.healthYellow :
-                theme.colors.healthBlue
+                insight.type === 'achievement' ? '#10B981' + '20' :
+                insight.type === 'warning' ? '#EF4444' + '20' :
+                insight.type === 'tip' ? '#3B82F6' + '20' :
+                '#F59E0B' + '20'
               }
-            ]} />
+            ]}>
+              <Ionicons 
+                name={
+                  insight.type === 'achievement' ? 'trophy' :
+                  insight.type === 'warning' ? 'warning' :
+                  insight.type === 'tip' ? 'bulb' :
+                  'time'
+                } 
+                size={18} 
+                color={
+                  insight.type === 'achievement' ? '#10B981' :
+                  insight.type === 'warning' ? '#EF4444' :
+                  insight.type === 'tip' ? '#3B82F6' :
+                  '#F59E0B'
+                } 
+              />
+            </View>
+            <View style={styles.insightContent}>
+              <Text style={styles.insightTitle}>{insight.title}</Text>
+              <Text style={styles.insightDescription}>{insight.description}</Text>
+            </View>
           </View>
-        ))}
-      </View>
-    );
+          {insight.actionable && (
+            <TouchableOpacity style={styles.actionButton}>
+              <Text style={styles.actionButtonText}>Take Action</Text>
+              <Ionicons name="arrow-forward" size={14} color="#7C3AED" />
+            </TouchableOpacity>
+          )}
+        </Animated.View>
+      ))}
+    </Animated.View>
+  );
+
+  const renderTabContent = () => {
+    switch (selectedTab) {
+      case 'overview':
+        return (
+          <>
+            {renderHealthScore()}
+            {renderQuickStats()}
+            {renderInsights()}
+          </>
+        );
+      case 'vitals':
+        return renderDetailedMetrics();
+      case 'goals':
+        return renderGoals();
+      case 'history':
+        return (
+          <Animated.View entering={FadeInDown.delay(300)} style={styles.historyContainer}>
+            <Text style={styles.sectionTitle}>Health History</Text>
+            <View style={styles.comingSoonContainer}>
+              <Ionicons name="time-outline" size={48} color={theme.colors.textSecondary} />
+              <Text style={styles.comingSoonText}>Detailed health history and trends coming soon!</Text>
+              <Text style={styles.comingSoonSubtext}>
+                Track your progress over time with detailed charts and insights.
+              </Text>
+            </View>
+          </Animated.View>
+        );
+      default:
+        return null;
+    }
   };
+
+  const tabOptions = [
+    { key: 'overview', label: 'Overview', icon: 'home' },
+    { key: 'vitals', label: 'Vitals', icon: 'heart' },
+    { key: 'goals', label: 'Goals', icon: 'flag' },
+    { key: 'history', label: 'History', icon: 'time' },
+  ];
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    content: {
+      flex: 1,
+    },
+    helpButton: {
+      padding: 8,
+    },
+    tabContainer: {
+      flexDirection: 'row',
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    tabButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+    },
+    activeTabButton: {
+      backgroundColor: '#7C3AED' + '10',
+    },
+    tabText: {
+      fontSize: 12,
+      fontWeight: '500',
+      color: theme.colors.textSecondary,
+      marginLeft: 4,
+    },
+    activeTabText: {
+      color: '#7C3AED',
+      fontWeight: '600',
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: theme.colors.textPrimary,
+      marginBottom: 16,
+      paddingHorizontal: 20,
+    },
+    
+    // Health Score Card
+    healthScoreCard: {
+      margin: 20,
+      borderRadius: 16,
+      overflow: 'hidden',
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+    },
+    scoreGradient: {
+      padding: 24,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    scoreContent: {
+      flex: 1,
+    },
+    scoreLabel: {
+      fontSize: 14,
+      color: 'rgba(255,255,255,0.8)',
+      marginBottom: 4,
+    },
+    scoreValue: {
+      fontSize: 36,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+      marginBottom: 4,
+    },
+    scoreSubtitle: {
+      fontSize: 14,
+      color: 'rgba(255,255,255,0.9)',
+    },
+    scoreIcon: {
+      marginLeft: 16,
+    },
+
+    // Quick Stats
+    quickStatsContainer: {
+      marginBottom: 24,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: 20,
+      justifyContent: 'space-between',
+    },
+    statCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      width: (width - 60) / 2,
+      marginBottom: 12,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+    },
+    statHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    statIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.colors.textPrimary,
+      marginBottom: 2,
+    },
+    statUnit: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+      marginBottom: 4,
+    },
+    statType: {
+      fontSize: 10,
+      color: theme.colors.textSecondary,
+      fontWeight: '500',
+    },
+
+    // Detailed Metrics
+    detailedMetricsContainer: {
+      marginBottom: 24,
+    },
+    metricCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginHorizontal: 20,
+      marginBottom: 12,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+    },
+    metricHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    metricInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    metricIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    metricText: {
+      flex: 1,
+    },
+    metricName: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.colors.textPrimary,
+      marginBottom: 2,
+    },
+    metricTarget: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+    },
+    metricValue: {
+      alignItems: 'flex-end',
+    },
+    metricValueText: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.colors.textPrimary,
+    },
+    metricUnitText: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+    },
+    metricFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    statusBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    statusText: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: '#FFFFFF',
+      textTransform: 'uppercase',
+    },
+    trendContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    trendText: {
+      fontSize: 12,
+      fontWeight: '500',
+      marginLeft: 4,
+      textTransform: 'capitalize',
+    },
+
+    // Goals
+    goalsContainer: {
+      marginBottom: 24,
+    },
+    goalCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginHorizontal: 20,
+      marginBottom: 12,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+    },
+    goalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    goalIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    goalInfo: {
+      flex: 1,
+    },
+    goalName: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.colors.textPrimary,
+      marginBottom: 2,
+    },
+    goalProgress: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+    },
+    goalPercentage: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.colors.textPrimary,
+    },
+    progressBar: {
+      height: 6,
+      backgroundColor: theme.colors.border,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      borderRadius: 3,
+    },
+
+    // Insights
+    insightsContainer: {
+      marginBottom: 24,
+    },
+    insightCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginHorizontal: 20,
+      marginBottom: 12,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+    },
+    insightHeader: {
+      flexDirection: 'row',
+      marginBottom: 12,
+    },
+    insightIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+      marginTop: 2,
+    },
+    insightContent: {
+      flex: 1,
+    },
+    insightTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.colors.textPrimary,
+      marginBottom: 4,
+    },
+    insightDescription: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+      lineHeight: 18,
+    },
+    actionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      backgroundColor: '#7C3AED' + '10',
+      borderRadius: 8,
+      alignSelf: 'flex-start',
+    },
+    actionButtonText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#7C3AED',
+      marginRight: 4,
+    },
+
+    // History
+    historyContainer: {
+      marginBottom: 24,
+      paddingHorizontal: 20,
+    },
+    comingSoonContainer: {
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    comingSoonText: {
+      fontSize: 16,
+      color: theme.colors.textPrimary,
+      textAlign: 'center',
+      marginTop: 16,
+      fontWeight: '600',
+    },
+    comingSoonSubtext: {
+      fontSize: 14,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 8,
+      lineHeight: 20,
+    },
+  });
 
   return (
     <View style={styles.container}>
@@ -315,343 +879,44 @@ export default function HealthMetricsScreen() {
         showBackButton={true}
         rightComponent={
           <TouchableOpacity style={styles.helpButton}>
-            <Ionicons name="help-circle-outline" size={24} color={theme.colors.primary} />
+            <Ionicons name="add-circle-outline" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
         }
       />
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* BMI Calculator */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="fitness-outline" size={24} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>BMI Calculator</Text>
-          </View>
-
-          {/* Height Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Height</Text>
-            <View style={styles.inputRow}>
-              <TextInput
-                style={[styles.textInput, { flex: 1 }]}
-                value={height}
-                onChangeText={setHeight}
-                placeholder={heightUnit === 'cm' ? '170' : '5.6'}
-                keyboardType="numeric"
-                placeholderTextColor={theme.colors.textSecondary}
-              />
-              <View style={styles.unitSelector}>
-                <TouchableOpacity
-                  style={[
-                    styles.unitButton,
-                    heightUnit === 'cm' && styles.activeUnitButton
-                  ]}
-                  onPress={() => setHeightUnit('cm')}
-                >
-                  <Text style={[
-                    styles.unitText,
-                    heightUnit === 'cm' && styles.activeUnitText
-                  ]}>cm</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.unitButton,
-                    heightUnit === 'ft' && styles.activeUnitButton
-                  ]}
-                  onPress={() => setHeightUnit('ft')}
-                >
-                  <Text style={[
-                    styles.unitText,
-                    heightUnit === 'ft' && styles.activeUnitText
-                  ]}>ft</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          {/* Weight Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Weight</Text>
-            <View style={styles.inputRow}>
-              <TextInput
-                style={[styles.textInput, { flex: 1 }]}
-                value={weight}
-                onChangeText={setWeight}
-                placeholder={weightUnit === 'kg' ? '70' : '154'}
-                keyboardType="numeric"
-                placeholderTextColor={theme.colors.textSecondary}
-              />
-              <View style={styles.unitSelector}>
-                <TouchableOpacity
-                  style={[
-                    styles.unitButton,
-                    weightUnit === 'kg' && styles.activeUnitButton
-                  ]}
-                  onPress={() => setWeightUnit('kg')}
-                >
-                  <Text style={[
-                    styles.unitText,
-                    weightUnit === 'kg' && styles.activeUnitText
-                  ]}>kg</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.unitButton,
-                    weightUnit === 'lbs' && styles.activeUnitButton
-                  ]}
-                  onPress={() => setWeightUnit('lbs')}
-                >
-                  <Text style={[
-                    styles.unitText,
-                    weightUnit === 'lbs' && styles.activeUnitText
-                  ]}>lbs</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          {/* Calculate Button */}
-          <TouchableOpacity style={styles.calculateButton} onPress={calculateBMI}>
-            <Text style={styles.calculateButtonText}>Calculate BMI</Text>
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        {tabOptions.map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={[
+              styles.tabButton,
+              selectedTab === tab.key && styles.activeTabButton
+            ]}
+            onPress={() => setSelectedTab(tab.key as any)}
+          >
+            <Ionicons 
+              name={tab.icon as any} 
+              size={18} 
+              color={selectedTab === tab.key ? '#7C3AED' : theme.colors.textSecondary} 
+            />
+            <Text style={[
+              styles.tabText,
+              selectedTab === tab.key && styles.activeTabText
+            ]}>
+              {tab.label}
+            </Text>
           </TouchableOpacity>
+        ))}
+      </View>
 
-          {/* BMI Result */}
-          {renderBMIResult()}
-        </View>
-
-        {/* BMI History */}
-        {renderBMIHistory()}
-
-        {/* Health Metrics */}
-        {renderHealthMetrics()}
-
-        <View style={styles.bottomPadding} />
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {renderTabContent()}
       </ScrollView>
     </View>
   );
 }
-
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  helpButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  section: {
-    backgroundColor: theme.colors.card.background,
-    margin: 20,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: theme.colors.shadow.medium,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 8,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: theme.colors.text,
-    backgroundColor: theme.colors.surface,
-  },
-  unitSelector: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  unitButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: theme.colors.surface,
-  },
-  activeUnitButton: {
-    backgroundColor: theme.colors.primary,
-  },
-  unitText: {
-    fontSize: 14,
-    color: theme.colors.text,
-    fontWeight: '500',
-  },
-  activeUnitText: {
-    color: theme.colors.textOnPrimary,
-  },
-  calculateButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  calculateButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.textOnPrimary,
-  },
-  resultContainer: {
-    marginTop: 20,
-    padding: 20,
-    backgroundColor: theme.colors.primarySurface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-  },
-  bmiResult: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  bmiTitle: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
-    marginBottom: 8,
-  },
-  bmiValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: 12,
-  },
-  categoryBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.textOnPrimary,
-  },
-  bmiAdvice: {
-    marginBottom: 20,
-  },
-  adviceTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 8,
-  },
-  adviceText: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    lineHeight: 20,
-  },
-  bmiScale: {
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    paddingTop: 16,
-  },
-  scaleTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 12,
-  },
-  scaleItems: {
-    gap: 8,
-  },
-  scaleItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  scaleColor: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-  },
-  scaleText: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-  },
-  historyContainer: {
-    backgroundColor: theme.colors.card.background,
-    margin: 20,
-    marginTop: 0,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: theme.colors.shadow.medium,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  historyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 16,
-  },
-  historyItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  historyInfo: {
-    flex: 1,
-  },
-  historyBMI: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
-  },
-  historyCategory: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  historyDate: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  historyIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  bottomPadding: {
-    height: 80,
-  },
-});

@@ -55,46 +55,46 @@ export default function UnderstandingBloodPressureScreen() {
         <View style={styles.articleContainer}>
           {/* Introduction */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>What is Blood Pressure?</Text>
-            <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
-              Blood pressure is the force exerted by your blood against the walls of your arteries as your heart pumps blood throughout your body. It's measured using two numbers: systolic pressure (when your heart beats) and diastolic pressure (when your heart rests between beats).
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>What is Blood Pressure?</Text>
+            <Text style={[styles.paragraph, { color: colors.textPrimarySecondary }]}>
+              Blood pressure is the force exerted by your blood against the walls of your arteries as your heart pumps blood throughout your body. It&apos;s measured using two numbers: systolic pressure (when your heart beats) and diastolic pressure (when your heart rests between beats).
             </Text>
           </View>
 
           {/* Normal Ranges */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Understanding the Numbers</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Understanding the Numbers</Text>
             
             <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
               <View style={styles.rangeItem}>
                 <View style={[styles.rangeIndicator, { backgroundColor: '#10B981' }]} />
                 <View style={styles.rangeInfo}>
-                  <Text style={[styles.rangeTitle, { color: colors.text }]}>Normal</Text>
-                  <Text style={[styles.rangeValue, { color: colors.textSecondary }]}>Less than 120/80 mmHg</Text>
+                  <Text style={[styles.rangeTitle, { color: colors.textPrimary }]}>Normal</Text>
+                  <Text style={[styles.rangeValue, { color: colors.textPrimarySecondary }]}>Less than 120/80 mmHg</Text>
                 </View>
               </View>
               
               <View style={styles.rangeItem}>
                 <View style={[styles.rangeIndicator, { backgroundColor: '#F59E0B' }]} />
                 <View style={styles.rangeInfo}>
-                  <Text style={[styles.rangeTitle, { color: colors.text }]}>Elevated</Text>
-                  <Text style={[styles.rangeValue, { color: colors.textSecondary }]}>120-129 systolic, less than 80 diastolic</Text>
+                  <Text style={[styles.rangeTitle, { color: colors.textPrimary }]}>Elevated</Text>
+                  <Text style={[styles.rangeValue, { color: colors.textPrimarySecondary }]}>120-129 systolic, less than 80 diastolic</Text>
                 </View>
               </View>
               
               <View style={styles.rangeItem}>
                 <View style={[styles.rangeIndicator, { backgroundColor: '#EF4444' }]} />
                 <View style={styles.rangeInfo}>
-                  <Text style={[styles.rangeTitle, { color: colors.text }]}>High Blood Pressure Stage 1</Text>
-                  <Text style={[styles.rangeValue, { color: colors.textSecondary }]}>130-139/80-89 mmHg</Text>
+                  <Text style={[styles.rangeTitle, { color: colors.textPrimary }]}>High Blood Pressure Stage 1</Text>
+                  <Text style={[styles.rangeValue, { color: colors.textPrimarySecondary }]}>130-139/80-89 mmHg</Text>
                 </View>
               </View>
               
               <View style={styles.rangeItem}>
                 <View style={[styles.rangeIndicator, { backgroundColor: '#DC2626' }]} />
                 <View style={styles.rangeInfo}>
-                  <Text style={[styles.rangeTitle, { color: colors.text }]}>High Blood Pressure Stage 2</Text>
-                  <Text style={[styles.rangeValue, { color: colors.textSecondary }]}>140/90 mmHg or higher</Text>
+                  <Text style={[styles.rangeTitle, { color: colors.textPrimary }]}>High Blood Pressure Stage 2</Text>
+                  <Text style={[styles.rangeValue, { color: colors.textPrimarySecondary }]}>140/90 mmHg or higher</Text>
                 </View>
               </View>
             </View>
@@ -102,7 +102,7 @@ export default function UnderstandingBloodPressureScreen() {
 
           {/* Monitoring Tips */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>How to Monitor Your Blood Pressure</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>How to Monitor Your Blood Pressure</Text>
             
             <View style={styles.tipsList}>
               <View style={styles.tipItem}>
@@ -110,8 +110,8 @@ export default function UnderstandingBloodPressureScreen() {
                   <Ionicons name="time" size={20} color="white" />
                 </View>
                 <View style={styles.tipContent}>
-                  <Text style={[styles.tipTitle, { color: colors.text }]}>Best Times to Measure</Text>
-                  <Text style={[styles.tipDescription, { color: colors.textSecondary }]}>
+                  <Text style={[styles.tipTitle, { color: colors.textPrimary }]}>Best Times to Measure</Text>
+                  <Text style={[styles.tipDescription, { color: colors.textPrimarySecondary }]}>
                     Take readings at the same times each day, ideally in the morning before medication and in the evening.
                   </Text>
                 </View>
@@ -122,8 +122,8 @@ export default function UnderstandingBloodPressureScreen() {
                   <Ionicons name="body" size={20} color="white" />
                 </View>
                 <View style={styles.tipContent}>
-                  <Text style={[styles.tipTitle, { color: colors.text }]}>Proper Positioning</Text>
-                  <Text style={[styles.tipDescription, { color: colors.textSecondary }]}>
+                  <Text style={[styles.tipTitle, { color: colors.textPrimary }]}>Proper Positioning</Text>
+                  <Text style={[styles.tipDescription, { color: colors.textPrimarySecondary }]}>
                     Sit with your back straight, feet flat on the floor, and arm supported at heart level.
                   </Text>
                 </View>
@@ -134,8 +134,8 @@ export default function UnderstandingBloodPressureScreen() {
                   <Ionicons name="cafe" size={20} color="white" />
                 </View>
                 <View style={styles.tipContent}>
-                  <Text style={[styles.tipTitle, { color: colors.text }]}>Before You Measure</Text>
-                  <Text style={[styles.tipDescription, { color: colors.textSecondary }]}>
+                  <Text style={[styles.tipTitle, { color: colors.textPrimary }]}>Before You Measure</Text>
+                  <Text style={[styles.tipDescription, { color: colors.textPrimarySecondary }]}>
                     Avoid caffeine, exercise, and smoking for at least 30 minutes before taking a reading.
                   </Text>
                 </View>
@@ -145,40 +145,40 @@ export default function UnderstandingBloodPressureScreen() {
 
           {/* Lifestyle Tips */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Maintaining Healthy Blood Pressure</Text>
-            <Text style={[styles.paragraph, { color: colors.textSecondary }]}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Maintaining Healthy Blood Pressure</Text>
+            <Text style={[styles.paragraph, { color: colors.textPrimarySecondary }]}>
               Here are evidence-based strategies to help maintain healthy blood pressure levels:
             </Text>
             
             <View style={styles.lifestyleGrid}>
               <View style={[styles.lifestyleCard, { backgroundColor: colors.surface }]}>
                 <Ionicons name="restaurant" size={24} color="#10B981" />
-                <Text style={[styles.lifestyleTitle, { color: colors.text }]}>Healthy Diet</Text>
-                <Text style={[styles.lifestyleText, { color: colors.textSecondary }]}>
+                <Text style={[styles.lifestyleTitle, { color: colors.textPrimary }]}>Healthy Diet</Text>
+                <Text style={[styles.lifestyleText, { color: colors.textPrimarySecondary }]}>
                   Reduce sodium, increase fruits and vegetables, choose whole grains
                 </Text>
               </View>
 
               <View style={[styles.lifestyleCard, { backgroundColor: colors.surface }]}>
                 <Ionicons name="fitness" size={24} color="#3B82F6" />
-                <Text style={[styles.lifestyleTitle, { color: colors.text }]}>Regular Exercise</Text>
-                <Text style={[styles.lifestyleText, { color: colors.textSecondary }]}>
+                <Text style={[styles.lifestyleTitle, { color: colors.textPrimary }]}>Regular Exercise</Text>
+                <Text style={[styles.lifestyleText, { color: colors.textPrimarySecondary }]}>
                   Aim for 150 minutes of moderate aerobic activity per week
                 </Text>
               </View>
 
               <View style={[styles.lifestyleCard, { backgroundColor: colors.surface }]}>
                 <Ionicons name="scale" size={24} color="#8B5CF6" />
-                <Text style={[styles.lifestyleTitle, { color: colors.text }]}>Healthy Weight</Text>
-                <Text style={[styles.lifestyleText, { color: colors.textSecondary }]}>
+                <Text style={[styles.lifestyleTitle, { color: colors.textPrimary }]}>Healthy Weight</Text>
+                <Text style={[styles.lifestyleText, { color: colors.textPrimarySecondary }]}>
                   Maintain a healthy BMI through balanced nutrition and activity
                 </Text>
               </View>
 
               <View style={[styles.lifestyleCard, { backgroundColor: colors.surface }]}>
                 <Ionicons name="ban" size={24} color="#EF4444" />
-                <Text style={[styles.lifestyleTitle, { color: colors.text }]}>Limit Alcohol</Text>
-                <Text style={[styles.lifestyleText, { color: colors.textSecondary }]}>
+                <Text style={[styles.lifestyleTitle, { color: colors.textPrimary }]}>Limit Alcohol</Text>
+                <Text style={[styles.lifestyleText, { color: colors.textPrimarySecondary }]}>
                   No more than 1-2 drinks per day for men, 1 drink for women
                 </Text>
               </View>

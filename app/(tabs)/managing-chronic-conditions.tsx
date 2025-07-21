@@ -73,7 +73,7 @@ export default function ManagingChronicConditionsScreen() {
                 <View style={styles.conditionContent}>
                   <Text style={[styles.conditionTitle, { color: colors.text }]}>Hypertension</Text>
                   <Text style={[styles.conditionDescription, { color: colors.textSecondary }]}>
-                    High blood pressure affects 1 in 4 South African adults. Often called the "silent killer."
+                    High blood pressure affects 1 in 4 South African adults. Often called the &ldquo;silent killer.&rdquo;
                   </Text>
                   <Text style={[styles.conditionStats, { color: '#DC2626' }]}>~28% prevalence</Text>
                 </View>

@@ -3,23 +3,27 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Dimensions,
-    Image,
-    ImageSourcePropType,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  ImageSourcePropType,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Animated, {
-    FadeInDown,
-    FadeInRight,
-    SlideInUp,
+  FadeInDown,
+  FadeInRight,
+  SlideInUp,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DoctorCard from '../../components/DoctorCard';
+import { UserAvatarMenu } from '../../components/UserAvatarMenu';
 import { ColorPalette } from '../../constants/DynamicTheme';
+import { CURRENT_USER, getGreeting } from '../../constants/User';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
@@ -134,7 +138,7 @@ const DEALS_OFFERS: DealOffer[] = [
     pharmacy: 'Dis-Chem',
     image: require('../../assets/images/MedLynx-02.jpeg'),
     backgroundColor: '#8B5CF6',
-    route: '/health-directory',
+    route: '/carehub',
   },
   {
     id: '3',
@@ -158,7 +162,7 @@ const DEALS_OFFERS: DealOffer[] = [
     pharmacy: 'Dr. Smith Clinic',
     image: require('../../assets/images/MedLynx-04.jpeg'),
     backgroundColor: '#9333EA',
-    route: '/health-directory',
+    route: '/carehub',
   },
   {
     id: '5',
@@ -206,8 +210,8 @@ const FEATURED_ITEMS: FeaturedItem[] = [
   {
     id: '4',
     title: 'Health Directory',
-    subtitle: 'Find Healthcare Near You',
-    description: 'Locate hospitals, clinics & specialists',
+    subtitle: 'Medical Professionals',
+    description: 'Find doctors, specialists & healthcare facilities',
     image: require('../../assets/images/MedLynx-09.jpeg'),
     route: '/health-directory',
     backgroundColor: '#9333EA',
@@ -322,6 +326,183 @@ const HEALTH_CARDS: HealthCard[] = [
   },
 ];
 
+// Medical Professionals interface
+interface Doctor {
+  id: string;
+  name: string;
+  specialization: string;
+  rating: number;
+  experience: string;
+  avatar: ImageSourcePropType;
+  availability: string;
+  location: string;
+  consultationFee: string;
+  address: string;
+  phone: string;
+  email: string;
+  qualifications: string[];
+  languages: string[];
+  availableTimes: string[];
+  conditions: string[];
+  ethnicity?: string;
+}
+
+// Medical Professionals data - Diverse doctors with complete booking information
+const MEDICAL_PROFESSIONALS: Doctor[] = [
+  {
+    id: '1',
+    name: 'Dr. Thandiwe Mthembu',
+    specialization: 'General Practitioner',
+    rating: 4.9,
+    experience: '12 years',
+    avatar: require('../../assets/images/MedLynx-01.jpeg'),
+    availability: 'Available Today',
+    location: 'Nearby - 0.8km',
+    consultationFee: 'R600',
+    address: '123 Nelson Mandela Drive, Sandton, Johannesburg, 2196',
+    phone: '+27 11 555 0001',
+    email: 'dr.mthembu@medlynx.co.za',
+    qualifications: ['MBChB (Wits)', 'Family Medicine Diploma'],
+    languages: ['English', 'Zulu', 'Afrikaans'],
+    availableTimes: ['09:00', '11:00', '14:00', '16:00'],
+    conditions: ['General Health', 'Chronic Disease Management', 'Preventive Care', 'Health Screening'],
+    ethnicity: 'Black African'
+  },
+  {
+    id: '2',
+    name: 'Dr. Sipho Ndaba',
+    specialization: 'Cardiologist',
+    rating: 4.8,
+    experience: '15 years',
+    avatar: require('../../assets/images/MedLynx-02.jpeg'),
+    availability: 'Available Today',
+    location: 'Nearby - 1.2km',
+    consultationFee: 'R850',
+    address: '456 Jan Smuts Avenue, Rosebank, Johannesburg, 2196',
+    phone: '+27 11 555 0002',
+    email: 'dr.ndaba@medlynx.co.za',
+    qualifications: ['MBChB (UCT)', 'MMed Cardiology', 'FCP(SA)'],
+    languages: ['English', 'Zulu', 'Sotho'],
+    availableTimes: ['08:00', '10:30', '13:00', '15:30'],
+    conditions: ['Heart Disease', 'Hypertension', 'Chest Pain', 'Cardiac Risk Assessment'],
+    ethnicity: 'Black African'
+  },
+  {
+    id: '3',
+    name: 'Dr. Nomsa Zulu',
+    specialization: 'Pediatrician',
+    rating: 4.9,
+    experience: '10 years',
+    avatar: require('../../assets/images/MedLynx-03.jpeg'),
+    availability: 'Next Available: Tomorrow',
+    location: 'Nearby - 2.1km',
+    consultationFee: 'R750',
+    address: '789 Oxford Road, Parktown, Johannesburg, 2193',
+    phone: '+27 11 555 0003',
+    email: 'dr.zulu@medlynx.co.za',
+    qualifications: ['MBChB (UKZN)', 'MMed Paediatrics', 'DCH'],
+    languages: ['English', 'Zulu', 'Xhosa'],
+    availableTimes: ['09:30', '11:30', '14:30', '16:30'],
+    conditions: ['Child Health', 'Vaccinations', 'Growth & Development', 'Pediatric Emergencies'],
+    ethnicity: 'Black African'
+  },
+  {
+    id: '4',
+    name: 'Dr. Priya Sharma',
+    specialization: 'Dermatologist',
+    rating: 4.8,
+    experience: '13 years',
+    avatar: require('../../assets/images/MedLynx-04.jpeg'),
+    availability: 'Available Today',
+    location: 'Nearby - 1.8km',
+    consultationFee: 'R950',
+    address: '321 Rivonia Road, Sandton, Johannesburg, 2196',
+    phone: '+27 11 555 0004',
+    email: 'dr.sharma@medlynx.co.za',
+    qualifications: ['MBBS (Delhi)', 'MD Dermatology', 'HPCSA Registered'],
+    languages: ['English', 'Hindi', 'Afrikaans'],
+    availableTimes: ['08:30', '10:00', '13:30', '15:00'],
+    conditions: ['Skin Conditions', 'Acne Treatment', 'Skin Cancer Screening', 'Cosmetic Dermatology'],
+    ethnicity: 'Indian'
+  },
+  {
+    id: '5',
+    name: 'Dr. Sarah Johnson',
+    specialization: 'Gynecologist',
+    rating: 4.9,
+    experience: '16 years',
+    avatar: require('../../assets/images/MedLynx-05.jpeg'),
+    availability: 'Available Tomorrow',
+    location: 'Nearby - 2.5km',
+    consultationFee: 'R800',
+    address: '654 William Nicol Drive, Fourways, Johannesburg, 2055',
+    phone: '+27 11 555 0005',
+    email: 'dr.johnson@medlynx.co.za',
+    qualifications: ['MBChB (Wits)', 'MMed O&G', 'FCOG(SA)'],
+    languages: ['English', 'Afrikaans'],
+    availableTimes: ['09:00', '11:00', '14:00', '16:00'],
+    conditions: ['Women\'s Health', 'Pregnancy Care', 'Fertility Issues', 'Gynecological Surgery'],
+    ethnicity: 'White'
+  },
+  {
+    id: '6',
+    name: 'Dr. Rajesh Patel',
+    specialization: 'Psychiatrist',
+    rating: 4.7,
+    experience: '18 years',
+    avatar: require('../../assets/images/MedLynx-06.jpeg'),
+    availability: 'Available This Week',
+    location: 'Nearby - 3.1km',
+    consultationFee: 'R900',
+    address: '987 Main Road, Melville, Johannesburg, 2109',
+    phone: '+27 11 555 0006',
+    email: 'dr.patel@medlynx.co.za',
+    qualifications: ['MBBS (Mumbai)', 'MD Psychiatry', 'MRCPsych'],
+    languages: ['English', 'Hindi', 'Gujarati'],
+    availableTimes: ['08:00', '10:00', '13:00', '15:00', '17:00'],
+    conditions: ['Mental Health', 'Depression', 'Anxiety', 'Therapy & Counseling'],
+    ethnicity: 'Indian'
+  },
+  {
+    id: '7',
+    name: 'Dr. Michael van der Merwe',
+    specialization: 'Orthopedic Surgeon',
+    rating: 4.8,
+    experience: '20 years',
+    avatar: require('../../assets/images/MedLynx-01.jpeg'),
+    availability: 'Available Today',
+    location: 'Nearby - 4.2km',
+    consultationFee: 'R1200',
+    address: '147 Barry Hertzog Avenue, Emmarentia, Johannesburg, 2195',
+    phone: '+27 11 555 0007',
+    email: 'dr.vandermerwe@medlynx.co.za',
+    qualifications: ['MBChB (Stellenbosch)', 'MMed Orthopaedics', 'FCS Orth(SA)'],
+    languages: ['English', 'Afrikaans'],
+    availableTimes: ['07:30', '09:30', '12:00', '14:30'],
+    conditions: ['Bone & Joint Problems', 'Sports Injuries', 'Fractures', 'Joint Replacement'],
+    ethnicity: 'White'
+  },
+  {
+    id: '8',
+    name: 'Dr. Kavitha Reddy',
+    specialization: 'Neurologist',
+    rating: 4.9,
+    experience: '14 years',
+    avatar: require('../../assets/images/MedLynx-02.jpeg'),
+    availability: 'Available Tomorrow',
+    location: 'Nearby - 2.9km',
+    consultationFee: 'R1100',
+    address: '258 Witkoppen Road, Paulshof, Johannesburg, 2056',
+    phone: '+27 11 555 0008',
+    email: 'dr.reddy@medlynx.co.za',
+    qualifications: ['MBBS (Hyderabad)', 'DM Neurology', 'MRCP'],
+    languages: ['English', 'Telugu', 'Hindi'],
+    availableTimes: ['08:30', '10:30', '13:30', '15:30'],
+    conditions: ['Neurological Disorders', 'Headaches', 'Epilepsy', 'Stroke Care'],
+    ethnicity: 'Indian'
+  }
+];
+
 export default function ModernHomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -331,16 +512,17 @@ export default function ModernHomeScreen() {
   const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good Morning');
-    else if (hour < 17) setGreeting('Good Afternoon');
-    else setGreeting('Good Evening');
+    setGreeting(getGreeting());
   }, []);
 
   const styles = createStyles(colors);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar 
+        barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} 
+        backgroundColor={colors.background}
+      />
       <ScrollView 
         style={styles.content}
         showsVerticalScrollIndicator={false}
@@ -356,16 +538,19 @@ export default function ModernHomeScreen() {
               resizeMode="contain"
             />
             <View style={styles.greetingText}>
-              <Text style={styles.greeting}>{greeting}</Text>
-              <Text style={styles.userName}>John Doe</Text>
+              <Text style={[styles.greeting, { color: colors.textSecondary }]}>{greeting}</Text>
+              <Text style={[styles.userName, { color: colors.textPrimary }]}>{CURRENT_USER.name}</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications-outline" size={24} color="#7C3AED" />
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>2</Text>
-            </View>
-          </TouchableOpacity>
+          <View style={styles.headerRightSection}>
+            <TouchableOpacity style={styles.notificationButton}>
+              <Ionicons name="notifications-outline" size={24} color="#7C3AED" />
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>3</Text>
+              </View>
+            </TouchableOpacity>
+            <UserAvatarMenu size={40} />
+          </View>
         </View>
 
         {/* Search Bar */}
@@ -389,8 +574,11 @@ export default function ModernHomeScreen() {
       </View>
 
       {/* Main Categories - Uber Eats Style */}
+        {/* Quick Access Categories */}
         <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Access</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Access</Text>
+          </View>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false} 
@@ -410,7 +598,7 @@ export default function ModernHomeScreen() {
                 >
                   <Ionicons name={category.icon} size={24} color="white" />
                 </TouchableOpacity>
-                <Text style={styles.categoryName}>{category.name}</Text>
+                <Text style={[styles.categoryName, { color: colors.textPrimary }]}>{category.name}</Text>
               </Animated.View>
             ))}
           </ScrollView>
@@ -419,7 +607,7 @@ export default function ModernHomeScreen() {
         {/* Deals & Offers Carousel */}
         <Animated.View entering={FadeInDown.delay(350)} style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Today&apos;s Deals</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Today&apos;s Deals</Text>
             <TouchableOpacity onPress={() => router.push('/carehub')}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
@@ -481,7 +669,12 @@ export default function ModernHomeScreen() {
 
         {/* Health Overview Cards */}
         <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
-          <Text style={styles.sectionTitle}>Today&apos;s Health</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Today&apos;s Health</Text>
+            <TouchableOpacity onPress={() => router.push('/health-metrics')}>
+              <Text style={styles.seeAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.healthCardsContainer}>
             {HEALTH_CARDS.map((card, index) => (
               <Animated.View
@@ -498,9 +691,9 @@ export default function ModernHomeScreen() {
                     <Ionicons name={card.icon} size={18} color="#FFFFFF" />
                   </View>
                   <View style={styles.healthCardContent}>
-                    <Text style={styles.healthCardValue} numberOfLines={1}>{card.value}</Text>
-                    <Text style={styles.healthCardTitle} numberOfLines={1}>{card.title}</Text>
-                    <Text style={styles.healthCardSubtitle} numberOfLines={2}>{card.subtitle}</Text>
+                    <Text style={[styles.healthCardValue, { color: colors.textPrimary }]} numberOfLines={1}>{card.value}</Text>
+                    <Text style={[styles.healthCardTitle, { color: colors.textSecondary }]} numberOfLines={1}>{card.title}</Text>
+                    <Text style={[styles.healthCardSubtitle, { color: colors.textSecondary }]} numberOfLines={2}>{card.subtitle}</Text>
                   </View>
                 </TouchableOpacity>
               </Animated.View>
@@ -510,7 +703,9 @@ export default function ModernHomeScreen() {
 
         {/* Featured Services */}
         <Animated.View entering={FadeInDown.delay(500)} style={styles.section}>
-          <Text style={styles.sectionTitle}>Featured Services</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Featured Services</Text>
+          </View>
           <View style={styles.featuredContainer}>
             {FEATURED_ITEMS.map((item, index) => (
               <Animated.View
@@ -553,7 +748,7 @@ export default function ModernHomeScreen() {
         {/* Health Tips */}
         <Animated.View entering={FadeInDown.delay(550)} style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Health Tips & Insights</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Health Tips & Insights</Text>
             <TouchableOpacity onPress={() => router.push('/lynx-pulse')}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
@@ -597,9 +792,40 @@ export default function ModernHomeScreen() {
           </ScrollView>
         </Animated.View>
 
+        {/* Medical Professionals */}
+        <Animated.View entering={FadeInDown.delay(575)} style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Medical Professionals</Text>
+            <TouchableOpacity onPress={() => router.push('/doctors-list' as any)}>
+              <Text style={styles.seeAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.doctorsScrollContent}
+            style={styles.doctorsScrollView}
+          >
+            {MEDICAL_PROFESSIONALS.slice(0, 6).map((doctor, index) => (
+              <Animated.View
+                key={doctor.id}
+                entering={FadeInRight.delay(100 * index)}
+              >
+                <DoctorCard
+                  doctor={doctor}
+                  onPress={(selectedDoctor) => router.push('/doctor-booking' as any)}
+                  variant="home"
+                />
+              </Animated.View>
+            ))}
+          </ScrollView>
+        </Animated.View>
+
         {/* More Services - Expanded */}
         <Animated.View entering={FadeInDown.delay(600)} style={styles.section}>
-          <Text style={styles.sectionTitle}>More Services</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>More Services</Text>
+          </View>
           <View style={styles.quickActionsGrid}>
             <TouchableOpacity 
               style={styles.quickActionItem}
@@ -610,10 +836,10 @@ export default function ModernHomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.quickActionItem}
-              onPress={() => router.push('/health-directory')}
+              onPress={() => router.push('/carehub')}
             >
-              <Ionicons name="location" size={24} color="#7C3AED" />
-              <Text style={styles.quickActionText}>Find Healthcare</Text>
+              <Ionicons name="storefront" size={24} color="#7C3AED" />
+              <Text style={styles.quickActionText}>CareHub Store</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.quickActionItem}
@@ -706,13 +932,16 @@ const createStyles = (colors: ColorPalette) => StyleSheet.create({
   },
   greeting: {
     fontSize: 14,
-    color: colors.textSecondary,
     marginBottom: 2,
   },
   userName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.textPrimary,
+  },
+  headerRightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   notificationButton: {
     position: 'relative',
@@ -762,9 +991,7 @@ const createStyles = (colors: ColorPalette) => StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.textPrimary,
     marginBottom: 16,
-    paddingHorizontal: 20,
   },
   // Categories
   categoriesScroll: {
@@ -796,8 +1023,8 @@ const createStyles = (colors: ColorPalette) => StyleSheet.create({
   categoryName: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textPrimary,
     textAlign: 'center',
+    marginTop: 8,
   },
   // Health Cards - Updated for grid layout
   healthCardsContainer: {
@@ -847,21 +1074,18 @@ const createStyles = (colors: ColorPalette) => StyleSheet.create({
   healthCardValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: colors.textPrimary,
     marginBottom: 2,
     textAlign: 'center',
   },
   healthCardTitle: {
     fontSize: 10,
     fontWeight: '600',
-    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 2,
     lineHeight: 12,
   },
   healthCardSubtitle: {
     fontSize: 8,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 10,
     opacity: 0.8,
@@ -939,6 +1163,11 @@ const createStyles = (colors: ColorPalette) => StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     marginBottom: 16,
+  },
+  sectionLogo: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
   },
   seeAllText: {
     fontSize: 14,
@@ -1145,5 +1374,217 @@ const createStyles = (colors: ColorPalette) => StyleSheet.create({
     fontSize: 9,
     color: 'rgba(255,255,255,0.7)',
     fontWeight: '500',
+  },
+  // Medical Professionals styles
+  doctorsScrollView: {
+    paddingLeft: 20,
+  },
+  doctorsScrollContent: {
+    paddingRight: 20,
+  },
+  doctorCard: {
+    width: width * 0.6,
+    marginRight: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 28,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 15,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  doctorCardButton: {
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  cardGradientBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.8,
+  },
+  statusBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 10,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  doctorAvatarContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 20,
+    zIndex: 5,
+  },
+  avatarWrapper: {
+    position: 'relative',
+    borderRadius: 40,
+    overflow: 'hidden',
+  },
+  doctorAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  avatarOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 40,
+  },
+  ratingBadge: {
+    position: 'absolute',
+    bottom: -8,
+    right: width * 0.6 / 2 - 65,
+    backgroundColor: colors.primary,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginLeft: 4,
+  },
+  doctorInfo: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    zIndex: 5,
+  },
+  doctorName: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    marginBottom: 8,
+    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+  specializationContainer: {
+    backgroundColor: `${colors.primary}20`,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginBottom: 16,
+  },
+  doctorSpecialization: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '700',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  detailsContainer: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  doctorDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  iconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: `${colors.primary}15`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  doctorLocation: {
+    fontSize: 12,
+    color: colors.textPrimary,
+    fontWeight: '600',
+    flex: 1,
+  },
+  doctorExperience: {
+    fontSize: 12,
+    color: colors.textPrimary,
+    fontWeight: '600',
+    flex: 1,
+  },
+  consultationFeeContainer: {
+    alignItems: 'center',
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+    width: '100%',
+  },
+  consultationFeeLabel: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 4,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  consultationFee: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
 });

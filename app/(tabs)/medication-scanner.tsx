@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import {
     ActivityIndicator,
     ScrollView,
+    StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -13,6 +14,7 @@ import {
 } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { StandardHeader } from '../../components/StandardHeader';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface MedicationData {
   name: string;
@@ -61,6 +63,7 @@ const mockMedications: MedicationData[] = [
 ];
 
 const MedicationScannerScreen: React.FC = () => {
+  const { theme } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
   const [medicationData, setMedicationData] = useState<MedicationData | null>(null);
@@ -510,15 +513,21 @@ const MedicationScannerScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: 0 }]}>
+      <StatusBar 
+        barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} 
+        backgroundColor={theme.colors.background}
+      />
       {/* Standard Header */}
       <StandardHeader 
-        title="MedScan"
+        title="Lynx Medication Scanner"
+        description="Instant prescription scanning"
         showBackButton={true}
+        showLogo={true}
         rightComponent={
           <TouchableOpacity 
             onPress={() => setShowInstructions(!showInstructions)}
           >
-            <Ionicons name={showInstructions ? "eye-off-outline" : "help-circle-outline"} size={24} color="#3726a6" />
+            <Ionicons name={showInstructions ? "eye-off-outline" : "help-circle-outline"} size={24} color={theme.mode === 'dark' ? '#FFFFFF' : '#3726a6'} />
           </TouchableOpacity>
         }
       />

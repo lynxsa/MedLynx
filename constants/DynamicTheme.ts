@@ -32,7 +32,9 @@ export interface ColorPalette {
   surfaceElevated: string;    // For elements that need to appear elevated, but still solid
 
   // Text Colors (Ensure High Contrast)
+  text: string;               // Alias for textPrimary for backward compatibility
   textPrimary: string;
+  textPrimarySecondary: string; // Alternative primary text color
   textSecondary: string;
   textTertiary: string;
   textDisabled: string;
@@ -158,7 +160,9 @@ export const LightThemeColors: ColorPalette = {
   surfaceSecondary: LYNX_COLORS.LYNXLightLavender, // Corrected typo
   surfaceElevated: LYNX_COLORS.PureWhite, // With subtle shadow for elevation
 
+  text: LYNX_COLORS.NearBlack, // Alias for textPrimary for backward compatibility
   textPrimary: LYNX_COLORS.NearBlack, // High contrast on light backgrounds
+  textPrimarySecondary: "#2C2C2C", // Alternative primary text color - slightly lighter than NearBlack
   textSecondary: "#4A4A4A", // Dark gray
   textTertiary: "#757575", // Medium gray
   textDisabled: "#BDBDBD", // Light gray
@@ -249,7 +253,9 @@ export const DarkThemeColors: ColorPalette = {
   surfaceSecondary: "#231A45", // Slightly different dark surface
   surfaceElevated: LYNX_COLORS.DarkSurface, // With subtle shadow/border for elevation
 
+  text: LYNX_COLORS.DarkText, // Alias for textPrimary for backward compatibility
   textPrimary: LYNX_COLORS.DarkText, //"#F0F0F0" Light gray/off-white
+  textPrimarySecondary: "#E0E0E0", // Alternative primary text color - slightly dimmer than DarkText
   textSecondary: LYNX_COLORS.DarkTextSecondary, //"#B0A8D9" Muted light purple/gray
   textTertiary: "#8A80B3", // Darker muted purple/gray
   textDisabled: "#6A6093",

@@ -4,19 +4,20 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    Modal,
-    RefreshControl,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TextStyle,
-    TouchableOpacity,
-    View,
-    ViewStyle
+  Modal,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextStyle,
+  TouchableOpacity,
+  View,
+  ViewStyle
 } from 'react-native';
 import { StandardHeader } from '../../components/StandardHeader';
+import { UserAvatarMenu } from '../../components/UserAvatarMenu';
 import { Theme } from '../../constants/DynamicTheme';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
@@ -27,6 +28,13 @@ interface Medication {
   dosage: string;
   frequency: string;
   time: string[];
+  timesToTake?: { time: string; taken: boolean }[];
+  startDate?: string;
+  endDate?: string;
+  prescribedBy?: string;
+  instructions?: string;
+  reminderEnabled?: boolean;
+  isActive?: boolean;
   refillDate: string;
   pillsRemaining: number;
   color: string;
@@ -85,6 +93,7 @@ interface CalendarStyles {
   
   // Header actions
   todayButton: ViewStyle;
+  headerRightContainer: ViewStyle;
   
   // Form styles
   formRow: ViewStyle;
@@ -273,6 +282,21 @@ interface CalendarStyles {
   historyStatusContainer: ViewStyle;
   historyStatusBadge: ViewStyle;
   historyStatusText: TextStyle;
+  
+  // Search and filter styles
+  searchContainer: ViewStyle;
+  searchInput: TextStyle;
+  filtersContainer: ViewStyle;
+  filterGroup: ViewStyle;
+  filterLabel: TextStyle;
+  filterScrollView: ViewStyle;
+  filterChip: ViewStyle;
+  filterChipActive: ViewStyle;
+  filterChipText: TextStyle;
+  filterChipTextActive: TextStyle;
+  emptySearchState: ViewStyle;
+  emptySearchTitle: TextStyle;
+  emptySearchSubtitle: TextStyle;
 }
 
 // Constants for form options
@@ -421,7 +445,7 @@ export default function ModernCalendarScreen() {
   };
 
   // Doctor data for appointment booking
-  const availableDoctors = [
+  const availableDoctors = useMemo(() => [
     {
       id: '1',
       name: 'Dr. Sarah Johnson',
@@ -481,8 +505,8 @@ export default function ModernCalendarScreen() {
       distance: '2.8 km',
       availability: ['10:00', '12:00', '15:00', '17:00'],
       isAvailable: true
-    }
-  ];
+    },
+  ], []);
 
   const [showDoctorSelectionModal, setShowDoctorSelectionModal] = useState(false);
   const [showAddAppointmentModal, setShowAddAppointmentModal] = useState(false);
@@ -491,6 +515,12 @@ export default function ModernCalendarScreen() {
   const [showAppointmentHistoryModal, setShowAppointmentHistoryModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  
+  // Doctor search and filter states
+  const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('all');
+  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [customReminder, setCustomReminder] = useState({
     title: '',
     doctorName: '',
@@ -529,7 +559,7 @@ export default function ModernCalendarScreen() {
   // Filter options for schedule
   const filterOptions = [
     { key: 'all', label: 'All', icon: 'apps-outline' },
-    { key: 'appointments', label: 'Appointments', icon: 'calendar-outline' },
+    { key: 'appointments', label: 'Appts', icon: 'calendar-outline' },
     { key: 'medications', label: 'Meds', icon: 'medical-outline' },
     { key: 'reminders', label: 'Reminders', icon: 'alarm-outline' }
   ];
@@ -592,6 +622,35 @@ export default function ModernCalendarScreen() {
       }
     }
   ];
+
+  // Filter doctors based on search and filters
+  const filteredDoctors = useMemo(() => {
+    return availableDoctors.filter(doctor => {
+      const matchesSearch = doctorSearchQuery === '' || 
+        (doctor.name && doctor.name.toLowerCase().includes(doctorSearchQuery.toLowerCase())) ||
+        (doctor.clinic && doctor.clinic.toLowerCase().includes(doctorSearchQuery.toLowerCase())) ||
+        (doctor.specialty && doctor.specialty.toLowerCase().includes(doctorSearchQuery.toLowerCase()));
+      
+      const matchesSpecialty = selectedSpecialty === 'all' || doctor.specialty === selectedSpecialty;
+      
+      const matchesLocation = selectedLocation === 'all' || 
+        (doctor.address && doctor.address.toLowerCase().includes(selectedLocation.toLowerCase()));
+      
+      return matchesSearch && matchesSpecialty && matchesLocation;
+    });
+  }, [availableDoctors, doctorSearchQuery, selectedSpecialty, selectedLocation]);
+
+  // Get unique specialties for filter dropdown
+  const uniqueSpecialties = useMemo(() => {
+    return [...new Set(availableDoctors.map(doctor => doctor.specialty).filter(Boolean))];
+  }, [availableDoctors]);
+  
+  // Get unique locations for filter dropdown
+  const uniqueLocations = useMemo(() => {
+    return [...new Set(availableDoctors.map(doctor => 
+      doctor.address ? (doctor.address.split(',')[1]?.trim() || doctor.address) : ''
+    ).filter(Boolean))];
+  }, [availableDoctors]);
 
   // Filter events based on selected filter
   const getFilteredEvents = () => {
@@ -720,6 +779,107 @@ export default function ModernCalendarScreen() {
     }
   ], []);
 
+  // Generate mock data for the next 5 days for better demonstration
+  const generateMockDataForNextDays = useMemo(() => {
+    const today = new Date();
+    const mockAppointments: any[] = [];
+    const mockMedications: any[] = [];
+    const mockRemindersExtra: any[] = [];
+
+    // Generate data for next 5 days
+    for (let i = 0; i < 5; i++) {
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + i);
+      
+      // Add appointments (1-2 per day)
+      const appointmentCount = Math.floor(Math.random() * 2) + 1;
+      for (let j = 0; j < appointmentCount; j++) {
+        const doctors = [
+          { name: 'Dr. Sarah Johnson', clinic: 'Mediclinic Sandton', reason: 'Annual Checkup' },
+          { name: 'Dr. Michael Chen', clinic: 'Netcare Rosebank', reason: 'Follow-up Consultation' },
+          { name: 'Dr. Aisha Patel', clinic: 'Life Healthcare', reason: 'Specialist Consultation' },
+          { name: 'Dr. Johan van der Merwe', clinic: 'Mediclinic Morningside', reason: 'Routine Check' }
+        ];
+        const doctor = doctors[Math.floor(Math.random() * doctors.length)];
+        const times = ['09:00', '10:30', '11:15', '14:00', '15:30', '16:45'];
+        const time = times[Math.floor(Math.random() * times.length)];
+        
+        mockAppointments.push({
+          id: `mock_apt_${i}_${j}`,
+          doctorName: doctor.name,
+          clinicName: doctor.clinic,
+          date: new Date(targetDate),
+          time: time,
+          reasonForVisit: doctor.reason,
+          status: 'confirmed',
+          isFollowUp: Math.random() > 0.7,
+          notes: '',
+          reminderSet: true,
+          type: 'appointment'
+        });
+      }
+
+      // Add medications - spread throughout the week more realistically
+      const allMedications = [
+        { name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily', times: ['08:00'], days: [0, 2, 4] }, // Mon, Wed, Fri
+        { name: 'Metformin', dosage: '500mg', frequency: 'Twice daily', times: ['08:00', '20:00'], days: [0, 1, 2, 3, 4] }, // Daily
+        { name: 'Vitamin D', dosage: '1000 IU', frequency: 'Once daily', times: ['08:00'], days: [0, 3] }, // Mon, Thu
+        { name: 'Aspirin', dosage: '81mg', frequency: 'Once daily', times: ['08:00'], days: [1, 4] }, // Tue, Fri
+        { name: 'Simvastatin', dosage: '20mg', frequency: 'Once daily', times: ['20:00'], days: [2, 4] }, // Wed, Fri
+        { name: 'Calcium', dosage: '600mg', frequency: 'Once daily', times: ['12:00'], days: [1, 3] }, // Tue, Thu
+      ];
+      
+      // Only add medications scheduled for this specific day
+      allMedications.forEach((med, medIndex) => {
+        if (med.days.includes(i)) {
+          mockMedications.push({
+            id: `mock_med_${i}_${medIndex}`,
+            name: med.name,
+            dosage: med.dosage,
+            frequency: med.frequency,
+            time: med.times,
+            date: new Date(targetDate),
+            isDaily: med.days.length === 5, // true if taken every weekday
+            reminderEnabled: true
+          });
+        }
+      });
+
+      // Add reminders (2-3 per day)
+      const reminderCount = Math.floor(Math.random() * 2) + 2;
+      const reminderTypes = [
+        { title: 'Blood Pressure Check', desc: 'Monitor and record BP', category: 'health', time: '12:00' },
+        { title: 'Exercise Session', desc: '30 minutes cardio', category: 'exercise', time: '06:30' },
+        { title: 'Water Intake', desc: 'Drink 8 glasses today', category: 'health', time: '09:00' },
+        { title: 'Meal Planning', desc: 'Plan healthy meals', category: 'diet', time: '17:00' },
+        { title: 'Sleep Preparation', desc: 'Wind down routine', category: 'health', time: '21:00' },
+        { title: 'Medication Review', desc: 'Check pill organizer', category: 'medication', time: '19:00' }
+      ];
+      
+      for (let k = 0; k < reminderCount; k++) {
+        const reminder = reminderTypes[Math.floor(Math.random() * reminderTypes.length)];
+        const priorities = ['high', 'medium', 'low'];
+        const priority = priorities[Math.floor(Math.random() * 3)];
+        
+        mockRemindersExtra.push({
+          id: `mock_rem_${i}_${k}`,
+          title: reminder.title,
+          description: reminder.desc,
+          date: new Date(targetDate),
+          time: reminder.time,
+          category: reminder.category,
+          isActive: true,
+          isRecurring: false,
+          priority: priority,
+          reminderSet: true,
+          notificationId: `mock_${i}_${k}`
+        });
+      }
+    }
+
+    return { mockAppointments, mockMedications, mockRemindersExtra };
+  }, []);
+
   // Load data
   const loadData = useCallback(async () => {
     try {
@@ -729,34 +889,46 @@ export default function ModernCalendarScreen() {
         AsyncStorage.getItem('reminders')
       ]);
 
+      // Load appointments with mock data fallback
       if (appointmentsData) {
         const parsedAppointments = JSON.parse(appointmentsData).map((apt: any) => ({
           ...apt,
           date: new Date(apt.date)
         }));
-        setAppointments(parsedAppointments);
+        setAppointments([...parsedAppointments, ...generateMockDataForNextDays.mockAppointments]);
+      } else {
+        // If no stored appointments, use mock data
+        setAppointments(generateMockDataForNextDays.mockAppointments);
       }
 
+      // Load medications with mock data fallback
       if (medicationsData) {
-        setMedications(JSON.parse(medicationsData));
+        const parsedMedications = JSON.parse(medicationsData);
+        setMedications([...parsedMedications, ...generateMockDataForNextDays.mockMedications]);
+      } else {
+        // If no stored medications, use mock data
+        setMedications(generateMockDataForNextDays.mockMedications);
       }
 
+      // Load reminders with mock data
       if (remindersData) {
         const parsedReminders = JSON.parse(remindersData).map((rem: any) => ({
           ...rem,
           date: new Date(rem.date)
         }));
-        setReminders([...parsedReminders, ...mockReminders]);
+        setReminders([...parsedReminders, ...mockReminders, ...generateMockDataForNextDays.mockRemindersExtra]);
       } else {
-        // If no stored reminders, use mock data
-        setReminders(mockReminders);
+        // If no stored reminders, use all mock data
+        setReminders([...mockReminders, ...generateMockDataForNextDays.mockRemindersExtra]);
       }
     } catch (error) {
       console.error('Error loading data:', error);
-      // Use mock data as fallback
-      setReminders(mockReminders);
+      // Use all mock data as fallback
+      setAppointments(generateMockDataForNextDays.mockAppointments);
+      setMedications(generateMockDataForNextDays.mockMedications);
+      setReminders([...mockReminders, ...generateMockDataForNextDays.mockRemindersExtra]);
     }
-  }, [mockReminders]);
+  }, [mockReminders, generateMockDataForNextDays]);
 
   // Effects
   useEffect(() => {
@@ -965,12 +1137,15 @@ export default function ModernCalendarScreen() {
       
       <StandardHeader
         title="Health Calendar"
-        subtitle="Manage your health journey"
+        description="Track meds & appointments"
         showLogo={true}
         rightComponent={
-          <TouchableOpacity onPress={goToToday} style={styles.todayButton}>
-            <Ionicons name="today-outline" size={20} color={theme.colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.headerRightContainer}>
+            <TouchableOpacity onPress={goToToday} style={styles.todayButton}>
+              <Ionicons name="today-outline" size={20} color={theme.colors.primary} />
+            </TouchableOpacity>
+            <UserAvatarMenu size={32} />
+          </View>
         }
       />
 
@@ -1180,10 +1355,87 @@ export default function ModernCalendarScreen() {
               <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Select a Doctor</Text>
-            <View style={{ width: 24 }} />
+            <TouchableOpacity onPress={() => setShowFilters(!showFilters)}>
+              <Ionicons name="options-outline" size={24} color={theme.colors.textPrimary} />
+            </TouchableOpacity>
           </View>
+          
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <Ionicons name="search-outline" size={20} color={theme.colors.textSecondary} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search doctors, specialties, or clinics"
+              value={doctorSearchQuery}
+              onChangeText={setDoctorSearchQuery}
+              placeholderTextColor={theme.colors.textSecondary}
+            />
+            {doctorSearchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setDoctorSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Filter Section */}
+          {showFilters && (
+            <View style={styles.filtersContainer}>
+              <View style={styles.filterGroup}>
+                <Text style={styles.filterLabel}>Specialty</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScrollView}>
+                  <TouchableOpacity
+                    style={[styles.filterChip, selectedSpecialty === 'all' && styles.filterChipActive]}
+                    onPress={() => setSelectedSpecialty('all')}
+                  >
+                    <Text style={[styles.filterChipText, selectedSpecialty === 'all' && styles.filterChipTextActive]}>All</Text>
+                  </TouchableOpacity>
+                  {uniqueSpecialties.map(specialty => (
+                    <TouchableOpacity
+                      key={specialty}
+                      style={[styles.filterChip, selectedSpecialty === specialty && styles.filterChipActive]}
+                      onPress={() => setSelectedSpecialty(specialty)}
+                    >
+                      <Text style={[styles.filterChipText, selectedSpecialty === specialty && styles.filterChipTextActive]}>{specialty}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+              
+              <View style={styles.filterGroup}>
+                <Text style={styles.filterLabel}>Location</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScrollView}>
+                  <TouchableOpacity
+                    style={[styles.filterChip, selectedLocation === 'all' && styles.filterChipActive]}
+                    onPress={() => setSelectedLocation('all')}
+                  >
+                    <Text style={[styles.filterChipText, selectedLocation === 'all' && styles.filterChipTextActive]}>All Areas</Text>
+                  </TouchableOpacity>
+                  {uniqueLocations.map(location => (
+                    <TouchableOpacity
+                      key={location}
+                      style={[styles.filterChip, selectedLocation === location && styles.filterChipActive]}
+                      onPress={() => setSelectedLocation(location)}
+                    >
+                      <Text style={[styles.filterChipText, selectedLocation === location && styles.filterChipTextActive]}>{location}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+          )}
+
           <ScrollView style={styles.doctorsList}>
-            {availableDoctors.map(renderDoctorCard)}
+            {filteredDoctors.length > 0 ? (
+              filteredDoctors.map(renderDoctorCard)
+            ) : (
+              <View style={styles.emptySearchState}>
+                <Ionicons name="search-outline" size={48} color={theme.colors.textSecondary} />
+                <Text style={styles.emptySearchTitle}>No doctors found</Text>
+                <Text style={styles.emptySearchSubtitle}>
+                  Try adjusting your search or filters to find more doctors.
+                </Text>
+              </View>
+            )}
           </ScrollView>
         </View>
       </Modal>
@@ -1323,7 +1575,7 @@ export default function ModernCalendarScreen() {
                         styles.typeButton,
                         customReminder.category === type && styles.activeTypeButton
                       ]}
-                      onPress={() => setCustomReminder({...customReminder, category: type as 'medication' | 'appointment' | 'checkup' | 'followup' | 'emergency'})}
+                      onPress={() => setCustomReminder({...customReminder, category: type as 'appointment' | 'health' | 'personal'})}
                     >
                       <Text style={[
                         styles.typeButtonText,
@@ -1613,13 +1865,18 @@ export default function ModernCalendarScreen() {
                     name: medicationForm.name || 'Untitled Medication',
                     dosage: medicationForm.dosage || '1 tablet',
                     frequency: medicationForm.frequency,
-                    timesToTake: [medicationForm.time || '08:00'],
-                    startDate: medicationForm.startDate,
-                    endDate: medicationForm.endDate,
+                    time: [medicationForm.time || '08:00'],
+                    timesToTake: [medicationForm.time || '08:00'].map(time => ({ time, taken: false })),
+                    startDate: medicationForm.startDate?.toISOString() || new Date().toISOString(),
+                    endDate: medicationForm.endDate?.toISOString(),
                     prescribedBy: medicationForm.prescribedBy,
                     instructions: medicationForm.instructions,
                     reminderEnabled: medicationForm.reminderEnabled,
-                    isActive: true
+                    isActive: true,
+                    refillDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+                    pillsRemaining: 30,
+                    color: '#4ECDC4',
+                    taken: false
                   };
                   
                   setMedications(prev => [...prev, newMedication]);
@@ -1749,6 +2006,12 @@ const createStyles = (theme: Theme): CalendarStyles => StyleSheet.create<Calenda
     padding: 8,
     borderRadius: 8,
     backgroundColor: theme.colors.surface,
+  },
+  
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   
   // Calendar section
@@ -2629,5 +2892,82 @@ const createStyles = (theme: Theme): CalendarStyles => StyleSheet.create<Calenda
     fontSize: 12,
     fontWeight: '600',
     color: 'white',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: theme.colors.textPrimary,
+    marginLeft: 8,
+    marginRight: 8,
+  },
+  filtersContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  filterGroup: {
+    marginBottom: 16,
+  },
+  filterLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    marginBottom: 8,
+  },
+  filterScrollView: {
+    flexGrow: 0,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginRight: 8,
+  },
+  filterChipActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  filterChipText: {
+    fontSize: 14,
+    color: theme.colors.textPrimary,
+  },
+  filterChipTextActive: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  emptySearchState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+  },
+  emptySearchTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySearchSubtitle: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
     Dimensions,
     Platform,
@@ -22,11 +21,8 @@ import Animated, {
     withSpring,
     withTiming,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ColorPalette } from '../../constants/DynamicTheme';
-import { useTheme } from '../../contexts/ThemeContext';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface OnboardingSlide {
   id: number;
@@ -83,10 +79,6 @@ const ONBOARDING_SLIDES: OnboardingSlide[] = [
 
 export default function ModernOnboardingScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
-  const { t } = useTranslation();
-  const colors = theme.colors as ColorPalette;
   
   const [currentPage, setCurrentPage] = useState(0);
   const pagerRef = useRef<PagerView>(null);

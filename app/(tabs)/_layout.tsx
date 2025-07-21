@@ -144,13 +144,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="health-directory"
-        options={{
-          title: 'Healthcare',
-          tabBarIcon: getTabBarIcon('health-directory'),
-        }}
-      />
-      <Tabs.Screen
         name="modern-profile"
         options={{
           title: 'Profile',
@@ -166,6 +159,10 @@ export default function TabLayout() {
       <Tabs.Screen name="modern-onboarding" options={{ href: null }} />
       <Tabs.Screen name="enhanced-home" options={{ href: null }} />
       <Tabs.Screen name="enhanced-home-clean" options={{ href: null }} />
+      <Tabs.Screen name="modern-home-new" options={{ href: null }} />
+      <Tabs.Screen name="health-directory" options={{ href: null }} />
+      <Tabs.Screen name="health-directory-clean" options={{ href: null }} />
+      <Tabs.Screen name="doctor-list" options={{ href: null }} />
       <Tabs.Screen name="add-medication" options={{ href: null }} />
       <Tabs.Screen name="food-scan" options={{ href: null }} />
       <Tabs.Screen name="medication-detail" options={{ href: null }} />
@@ -183,6 +180,13 @@ export default function TabLayout() {
       <Tabs.Screen name="managing-chronic-conditions" options={{ href: null }} />
       <Tabs.Screen name="lynx-pulse" options={{ href: null }} />
       <Tabs.Screen name="+not-found" options={{ href: null }} />
+      
+      {/* CareHub Related Pages - Hidden from tab bar */}
+      <Tabs.Screen name="all-pharmacies" options={{ href: null }} />
+      <Tabs.Screen name="pharmacy-store" options={{ href: null }} />
+      <Tabs.Screen name="categories" options={{ href: null }} />
+      <Tabs.Screen name="special-offers" options={{ href: null }} />
+      <Tabs.Screen name="featured-products" options={{ href: null }} />
     </Tabs>
   );
 }

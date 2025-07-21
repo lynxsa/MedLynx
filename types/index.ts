@@ -4,6 +4,7 @@ export interface Medication {
   dosage: string;
   frequency: string;
   time: string[];
+  timesToTake?: { time: string; taken: boolean }[];
   refillDate: string;
   pillsRemaining: number;
   color: string;
