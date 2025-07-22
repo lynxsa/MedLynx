@@ -1,399 +1,373 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Types for Cart System
 export interface CartItem {
   id: string;
-  medicationId: string;
   name: string;
-  genericName: string;
   price: number;
   originalPrice?: number;
   quantity: number;
-  dosage: string;
-  prescription: boolean;
-  image: any;
-  pharmacyId: string;
-  pharmacyName: string;
-  maxQuantity: number;
+  image: string;
+  pharmacy: string;
+  pharmacyColor: string;
   inStock: boolean;
-  couponApplied?: Coupon;
-  notes?: string;
+  stockCount?: number;
+  maxQuantity?: number;
+  genericName?: string;
+  dosage?: string;
+  packSize?: string;
+  prescription?: boolean;
+  realImageUrl?: string;
 }
 
-export interface Coupon {
-  id: string;
-  code: string;
-  type: 'percentage' | 'fixed' | 'free_delivery' | 'buy_one_get_one';
-  value: number;
-  description: string;
-  minOrderAmount: number;
-  maxDiscount?: number;
-  validUntil: Date;
-  validFor?: string[]; // Product categories or specific products
-  isActive: boolean;
+export interface CartSummary {
+  totalItems: number;
+  subtotal: number;
+  savings: number;
+  tax: number;
+  deliveryFee: number;
+  total: number;
 }
 
 export interface DeliveryOption {
   id: string;
   name: string;
   description: string;
-  price: number;
   estimatedTime: string;
-  icon: string;
-  isAvailable: boolean;
-}
-
-export interface SuggestedProduct {
-  id: string;
-  name: string;
   price: number;
-  originalPrice?: number;
-  image: any;
-  rating: number;
-  category: string;
-  discount?: number;
-  reason: 'frequently_bought_together' | 'customers_also_bought' | 'recommended_for_you' | 'related_products';
-}
-
-export interface CartSummary {
-  subtotal: number;
-  discount: number;
-  couponDiscount: number;
-  deliveryFee: number;
-  total: number;
-  itemCount: number;
-  savings: number;
-}
-
-export interface PaymentMethod {
-  id: string;
-  name: string;
-  type: 'card' | 'eft' | 'mobile' | 'wallet' | 'instant_payment';
-  description: string;
   icon: string;
-  fees?: number;
-  processingTime: string;
-  isAvailable: boolean;
-  providerLogo?: any;
 }
 
-// Cart Service Class
 class CartService {
   private static instance: CartService;
-  private cartKey = '@medlynx_cart';
-  private couponsKey = '@medlynx_applied_coupons';
+  private cartItems: CartItem[] = [];
+  private listeners: ((items: CartItem[]) => void)[] = [];
+  private readonly CART_STORAGE_KEY = 'medlynx_cart';
+  private readonly TAX_RATE = 0.15; // 15% VAT
+  
+  // Delivery options
+  private deliveryOptions: DeliveryOption[] = [
+    {
+      id: 'standard',
+      name: 'Standard Delivery',
+      description: '3-5 business days',
+      estimatedTime: '3-5 days',
+      price: 60,
+      icon: 'car',
+    },
+    {
+      id: 'express',
+      name: 'Express Delivery',
+      description: 'Next business day',
+      estimatedTime: '1 day',
+      price: 120,
+      icon: 'flash',
+    },
+    {
+      id: 'same-day',
+      name: 'Same Day Delivery',
+      description: 'Within 4 hours',
+      estimatedTime: '4 hours',
+      price: 200,
+      icon: 'time',
+    },
+    {
+      id: 'pickup',
+      name: 'Store Pickup',
+      description: 'Collect at pharmacy',
+      estimatedTime: '2 hours',
+      price: 0,
+      icon: 'storefront',
+    },
+  ];
 
-  static getInstance(): CartService {
+  private selectedDeliveryOption: DeliveryOption = this.deliveryOptions[0];
+
+  public static getInstance(): CartService {
     if (!CartService.instance) {
       CartService.instance = new CartService();
     }
     return CartService.instance;
   }
 
-  // Cart Management
-  async getCart(): Promise<CartItem[]> {
+  constructor() {
+    this.loadCartFromStorage();
+  }
+
+  // Storage operations
+  private async saveCartToStorage(): Promise<void> {
     try {
-      const cart = await AsyncStorage.getItem(this.cartKey);
-      return cart ? JSON.parse(cart) : [];
+      await AsyncStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(this.cartItems));
     } catch (error) {
-      console.error('Error getting cart:', error);
-      return [];
+      console.error('Error saving cart to storage:', error);
     }
   }
 
-  async addToCart(item: Omit<CartItem, 'quantity'>): Promise<void> {
+  private async loadCartFromStorage(): Promise<void> {
     try {
-      const cart = await this.getCart();
-      const existingIndex = cart.findIndex(cartItem => 
-        cartItem.medicationId === item.medicationId && 
-        cartItem.pharmacyId === item.pharmacyId
-      );
+      const storedCart = await AsyncStorage.getItem(this.CART_STORAGE_KEY);
+      if (storedCart) {
+        this.cartItems = JSON.parse(storedCart);
+        this.notifyListeners();
+      }
+    } catch (error) {
+      console.error('Error loading cart from storage:', error);
+    }
+  }
 
-      if (existingIndex !== -1) {
-        // Update quantity if item exists
-        cart[existingIndex].quantity = Math.min(
-          cart[existingIndex].quantity + 1, 
-          cart[existingIndex].maxQuantity
-        );
+  // Listener management
+  public addListener(listener: (items: CartItem[]) => void): () => void {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach(listener => listener([...this.cartItems]));
+  }
+
+  // Cart operations
+  public async addItem(product: any, quantity: number = 1): Promise<boolean> {
+    try {
+      const existingItemIndex = this.cartItems.findIndex(item => item.id === product.id);
+      
+      if (existingItemIndex !== -1) {
+        // Update existing item
+        const existingItem = this.cartItems[existingItemIndex];
+        const newQuantity = existingItem.quantity + quantity;
+        const maxAllowed = product.stockCount || existingItem.maxQuantity || 99;
+        
+        if (newQuantity > maxAllowed) {
+          return false; // Quantity exceeds available stock
+        }
+        
+        this.cartItems[existingItemIndex] = {
+          ...existingItem,
+          quantity: newQuantity
+        };
       } else {
         // Add new item
-        cart.push({ ...item, quantity: 1 });
+        const cartItem: CartItem = {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          originalPrice: product.originalPrice,
+          quantity,
+          image: product.image,
+          pharmacy: product.pharmacy,
+          pharmacyColor: product.pharmacyColor,
+          inStock: product.inStock,
+          stockCount: product.stockCount,
+          maxQuantity: product.stockCount || 99,
+          genericName: product.genericName,
+          dosage: product.dosage,
+          packSize: product.quantity,
+          prescription: product.prescription,
+          realImageUrl: product.realImageUrl,
+        };
+        
+        this.cartItems.push(cartItem);
+      }
+      
+      await this.saveCartToStorage();
+      this.notifyListeners();
+      return true;
+    } catch (error) {
+      console.error('Error adding item to cart:', error);
+      return false;
+    }
+  }
+
+  public async updateItemQuantity(productId: string, quantity: number): Promise<boolean> {
+    try {
+      const itemIndex = this.cartItems.findIndex(item => item.id === productId);
+      
+      if (itemIndex === -1) {
+        return false;
       }
 
-      await AsyncStorage.setItem(this.cartKey, JSON.stringify(cart));
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      throw error;
-    }
-  }
+      const item = this.cartItems[itemIndex];
+      const maxAllowed = item.maxQuantity || 99;
 
-  async updateQuantity(medicationId: string, pharmacyId: string, quantity: number): Promise<void> {
-    try {
-      const cart = await this.getCart();
-      const itemIndex = cart.findIndex(item => 
-        item.medicationId === medicationId && 
-        item.pharmacyId === pharmacyId
-      );
-
-      if (itemIndex !== -1) {
-        if (quantity <= 0) {
-          cart.splice(itemIndex, 1);
-        } else {
-          cart[itemIndex].quantity = Math.min(quantity, cart[itemIndex].maxQuantity);
-        }
-        await AsyncStorage.setItem(this.cartKey, JSON.stringify(cart));
+      if (quantity <= 0) {
+        // Remove item if quantity is 0 or negative
+        this.cartItems.splice(itemIndex, 1);
+      } else if (quantity <= maxAllowed) {
+        // Update quantity
+        this.cartItems[itemIndex] = {
+          ...item,
+          quantity
+        };
+      } else {
+        return false; // Quantity exceeds maximum allowed
       }
+
+      await this.saveCartToStorage();
+      this.notifyListeners();
+      return true;
     } catch (error) {
-      console.error('Error updating quantity:', error);
-      throw error;
+      console.error('Error updating item quantity:', error);
+      return false;
     }
   }
 
-  async removeFromCart(medicationId: string, pharmacyId: string): Promise<void> {
+  public async removeItem(productId: string): Promise<void> {
     try {
-      const cart = await this.getCart();
-      const updatedCart = cart.filter(item => 
-        !(item.medicationId === medicationId && item.pharmacyId === pharmacyId)
-      );
-      await AsyncStorage.setItem(this.cartKey, JSON.stringify(updatedCart));
+      this.cartItems = this.cartItems.filter(item => item.id !== productId);
+      await this.saveCartToStorage();
+      this.notifyListeners();
     } catch (error) {
-      console.error('Error removing from cart:', error);
-      throw error;
+      console.error('Error removing item from cart:', error);
     }
   }
 
-  async clearCart(): Promise<void> {
+  public async clearCart(): Promise<void> {
     try {
-      await AsyncStorage.removeItem(this.cartKey);
-      await AsyncStorage.removeItem(this.couponsKey);
+      this.cartItems = [];
+      await this.saveCartToStorage();
+      this.notifyListeners();
     } catch (error) {
       console.error('Error clearing cart:', error);
-      throw error;
     }
   }
 
-  // Coupon Management
-  async applyCoupon(coupon: Coupon, cartItems: CartItem[]): Promise<{ success: boolean; message: string; discount: number }> {
-    try {
-      // Validate coupon
-      const validation = this.validateCoupon(coupon, cartItems);
-      if (!validation.valid) {
-        return { success: false, message: validation.message, discount: 0 };
+  // Cart data access
+  public getItems(): CartItem[] {
+    return [...this.cartItems];
+  }
+
+  public getItemCount(): number {
+    return this.cartItems.reduce((total, item) => total + item.quantity, 0);
+  }
+
+  public getItem(productId: string): CartItem | undefined {
+    return this.cartItems.find(item => item.id === productId);
+  }
+
+  public hasItem(productId: string): boolean {
+    return this.cartItems.some(item => item.id === productId);
+  }
+
+  public getItemQuantity(productId: string): number {
+    const item = this.getItem(productId);
+    return item ? item.quantity : 0;
+  }
+
+  // Cart calculations
+  public getCartSummary(): CartSummary {
+    const subtotal = this.cartItems.reduce(
+      (total, item) => total + (item.price * item.quantity),
+      0
+    );
+
+    const savings = this.cartItems.reduce(
+      (total, item) => {
+        if (item.originalPrice && item.originalPrice > item.price) {
+          return total + ((item.originalPrice - item.price) * item.quantity);
+        }
+        return total;
+      },
+      0
+    );
+
+    const tax = subtotal * this.TAX_RATE;
+    const deliveryFee = this.selectedDeliveryOption.price;
+    const total = subtotal + tax + deliveryFee;
+
+    return {
+      totalItems: this.getItemCount(),
+      subtotal: Math.round(subtotal * 100) / 100,
+      savings: Math.round(savings * 100) / 100,
+      tax: Math.round(tax * 100) / 100,
+      deliveryFee,
+      total: Math.round(total * 100) / 100,
+    };
+  }
+
+  // Delivery options
+  public getDeliveryOptions(): DeliveryOption[] {
+    return [...this.deliveryOptions];
+  }
+
+  public getSelectedDeliveryOption(): DeliveryOption {
+    return this.selectedDeliveryOption;
+  }
+
+  public setDeliveryOption(optionId: string): boolean {
+    const option = this.deliveryOptions.find(opt => opt.id === optionId);
+    if (option) {
+      this.selectedDeliveryOption = option;
+      this.notifyListeners(); // Notify to update totals
+      return true;
+    }
+    return false;
+  }
+
+  // Validation
+  public validateCart(): { valid: boolean; issues: string[] } {
+    const issues: string[] = [];
+
+    for (const item of this.cartItems) {
+      if (!item.inStock) {
+        issues.push(`${item.name} is currently out of stock`);
       }
 
-      // Calculate discount
-      const discount = this.calculateCouponDiscount(coupon, cartItems);
-      
-      // Save applied coupons
-      const appliedCoupons = await this.getAppliedCoupons();
-      appliedCoupons.push(coupon);
-      await AsyncStorage.setItem(this.couponsKey, JSON.stringify(appliedCoupons));
+      if (item.stockCount && item.quantity > item.stockCount) {
+        issues.push(`${item.name} quantity exceeds available stock (${item.stockCount})`);
+      }
 
-      return { 
-        success: true, 
-        message: `Coupon applied! You saved R${discount.toFixed(2)}`, 
-        discount 
-      };
-    } catch (error) {
-      console.error('Error applying coupon:', error);
-      return { success: false, message: 'Failed to apply coupon', discount: 0 };
+      if (item.prescription) {
+        issues.push(`${item.name} requires a valid prescription`);
+      }
     }
+
+    return {
+      valid: issues.length === 0,
+      issues
+    };
   }
 
-  async removeCoupon(couponId: string): Promise<void> {
-    try {
-      const appliedCoupons = await this.getAppliedCoupons();
-      const updatedCoupons = appliedCoupons.filter(coupon => coupon.id !== couponId);
-      await AsyncStorage.setItem(this.couponsKey, JSON.stringify(updatedCoupons));
-    } catch (error) {
-      console.error('Error removing coupon:', error);
-      throw error;
-    }
+  // Grouping by pharmacy
+  public getItemsByPharmacy(): { [pharmacy: string]: CartItem[] } {
+    return this.cartItems.reduce((groups, item) => {
+      if (!groups[item.pharmacy]) {
+        groups[item.pharmacy] = [];
+      }
+      groups[item.pharmacy].push(item);
+      return groups;
+    }, {} as { [pharmacy: string]: CartItem[] });
   }
 
-  async getAppliedCoupons(): Promise<Coupon[]> {
-    try {
-      const coupons = await AsyncStorage.getItem(this.couponsKey);
-      return coupons ? JSON.parse(coupons) : [];
-    } catch (error) {
-      console.error('Error getting applied coupons:', error);
-      return [];
-    }
-  }
+  // Pharmacy-specific totals
+  public getPharmacyTotals(): { [pharmacy: string]: number } {
+    const itemsByPharmacy = this.getItemsByPharmacy();
+    const totals: { [pharmacy: string]: number } = {};
 
-  // Cart Calculations
-  async calculateCartSummary(deliveryOption?: DeliveryOption): Promise<CartSummary> {
-    try {
-      const cartItems = await this.getCart();
-      const appliedCoupons = await this.getAppliedCoupons();
-
-      const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const originalTotal = cartItems.reduce((sum, item) => 
-        sum + ((item.originalPrice || item.price) * item.quantity), 0
+    Object.keys(itemsByPharmacy).forEach(pharmacy => {
+      totals[pharmacy] = itemsByPharmacy[pharmacy].reduce(
+        (total, item) => total + (item.price * item.quantity),
+        0
       );
-      
-      const discount = originalTotal - subtotal;
-      const couponDiscount = appliedCoupons.reduce((sum, coupon) => 
-        sum + this.calculateCouponDiscount(coupon, cartItems), 0
-      );
+    });
 
-      const deliveryFee = deliveryOption?.price || 0;
-      const total = Math.max(0, subtotal - couponDiscount + deliveryFee);
-      const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-      const savings = discount + couponDiscount;
-
-      return {
-        subtotal,
-        discount,
-        couponDiscount,
-        deliveryFee,
-        total,
-        itemCount,
-        savings
-      };
-    } catch (error) {
-      console.error('Error calculating cart summary:', error);
-      return {
-        subtotal: 0,
-        discount: 0,
-        couponDiscount: 0,
-        deliveryFee: 0,
-        total: 0,
-        itemCount: 0,
-        savings: 0
-      };
-    }
+    return totals;
   }
 
-  // Suggested Products
-  getSuggestedProducts(cartItems: CartItem[]): SuggestedProduct[] {
-    // Mock suggested products - in real app, this would use ML/AI recommendations
-    const suggestions: SuggestedProduct[] = [
-      {
-        id: 'sg1',
-        name: 'Vitamin C 1000mg',
-        price: 89.99,
-        originalPrice: 109.99,
-        image: 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=300&h=300&fit=crop',
-        rating: 4.6,
-        category: 'vitamins',
-        discount: 18,
-        reason: 'frequently_bought_together'
-      },
-      {
-        id: 'sg2',
-        name: 'Zinc Tablets',
-        price: 45.50,
-        image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=300&h=300&fit=crop',
-        rating: 4.3,
-        category: 'supplements',
-        reason: 'customers_also_bought'
-      },
-      {
-        id: 'sg3',
-        name: 'Hand Sanitizer 500ml',
-        price: 35.99,
-        originalPrice: 42.99,
-        image: 'https://images.unsplash.com/photo-1584745224532-bccf2e3c6b60?w=300&h=300&fit=crop',
-        rating: 4.8,
-        category: 'hygiene',
-        discount: 16,
-        reason: 'recommended_for_you'
-      }
-    ];
-
-    return suggestions;
+  // Quick actions
+  public async incrementItem(productId: string): Promise<boolean> {
+    const item = this.getItem(productId);
+    if (item) {
+      return await this.updateItemQuantity(productId, item.quantity + 1);
+    }
+    return false;
   }
 
-  // Delivery Options
-  getDeliveryOptions(): DeliveryOption[] {
-    return [
-      {
-        id: 'standard',
-        name: 'Standard Delivery',
-        description: '3-5 business days',
-        price: 65,
-        estimatedTime: '3-5 days',
-        icon: 'car-outline',
-        isAvailable: true
-      },
-      {
-        id: 'express',
-        name: 'Express Delivery',
-        description: 'Next business day',
-        price: 125,
-        estimatedTime: '1 day',
-        icon: 'flash-outline',
-        isAvailable: true
-      },
-      {
-        id: 'same_day',
-        name: 'Same Day Delivery',
-        description: 'Within 4-6 hours (Johannesburg & Cape Town)',
-        price: 199,
-        estimatedTime: '4-6 hours',
-        icon: 'time-outline',
-        isAvailable: true
-      },
-      {
-        id: 'click_collect',
-        name: 'Click & Collect',
-        description: 'Collect from nearest store',
-        price: 0,
-        estimatedTime: '2-4 hours',
-        icon: 'storefront-outline',
-        isAvailable: true
-      }
-    ];
-  }
-
-  // Private helper methods
-  private validateCoupon(coupon: Coupon, cartItems: CartItem[]): { valid: boolean; message: string } {
-    if (!coupon.isActive) {
-      return { valid: false, message: 'This coupon is no longer active' };
+  public async decrementItem(productId: string): Promise<boolean> {
+    const item = this.getItem(productId);
+    if (item) {
+      return await this.updateItemQuantity(productId, item.quantity - 1);
     }
-
-    if (new Date() > coupon.validUntil) {
-      return { valid: false, message: 'This coupon has expired' };
-    }
-
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    if (subtotal < coupon.minOrderAmount) {
-      return { 
-        valid: false, 
-        message: `Minimum order amount of R${coupon.minOrderAmount} required` 
-      };
-    }
-
-    return { valid: true, message: 'Coupon is valid' };
-  }
-
-  private calculateCouponDiscount(coupon: Coupon, cartItems: CartItem[]): number {
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-    switch (coupon.type) {
-      case 'percentage':
-        const percentageDiscount = (subtotal * coupon.value) / 100;
-        return coupon.maxDiscount 
-          ? Math.min(percentageDiscount, coupon.maxDiscount)
-          : percentageDiscount;
-      
-      case 'fixed':
-        return Math.min(coupon.value, subtotal);
-      
-      case 'free_delivery':
-        return 65; // Standard delivery fee
-      
-      case 'buy_one_get_one':
-        // Simplified BOGO calculation
-        return cartItems.reduce((discount, item) => {
-          const pairs = Math.floor(item.quantity / 2);
-          return discount + (pairs * item.price);
-        }, 0);
-      
-      default:
-        return 0;
-    }
+    return false;
   }
 }
 

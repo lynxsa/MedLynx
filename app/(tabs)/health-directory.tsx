@@ -46,7 +46,7 @@ const directoryOptions: DirectoryOption[] = [
     description: 'Connect with qualified doctors and medical specialists. View profiles, availability, and book appointments instantly.',
     icon: 'people-outline',
     gradient: ['#f093fb', '#f5576c'],
-    route: '/doctor-list',
+    route: '/doctors-list',
     stats: '1200+ Professionals',
     image: require('../../assets/images/MedLynx-11.jpeg')
   }

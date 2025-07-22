@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -11,6 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import DoctorCard from '../../components/DoctorCard';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
@@ -253,19 +255,24 @@ export default function DoctorsListScreen() {
         backgroundColor={colors.background}
       />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
-          Medical Professionals
-        </Text>
-        <View style={styles.headerRight} />
-      </View>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={theme.mode === 'dark' ? ['#1a1a1a', '#2d2d2d'] : ['#f8f9ff', '#e8f0ff']}
+        style={styles.headerGradient}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
+            Medical Professionals
+          </Text>
+          <View style={styles.headerRight} />
+        </View>
+      </LinearGradient>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
@@ -329,13 +336,17 @@ export default function DoctorsListScreen() {
         contentContainerStyle={styles.doctorsListContent}
         showsVerticalScrollIndicator={false}
       >
-        {filteredDoctors.map((doctor) => (
-          <DoctorCard
+        {filteredDoctors.map((doctor, index) => (
+          <Animated.View
             key={doctor.id}
-            doctor={doctor}
-            onPress={handleDoctorPress}
-            variant="list"
-          />
+            entering={FadeInDown.delay(index * 100).duration(600)}
+          >
+            <DoctorCard
+              doctor={doctor}
+              onPress={handleDoctorPress}
+              variant="list"
+            />
+          </Animated.View>
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -346,13 +357,15 @@ const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerGradient: {
+    paddingTop: 10,
+    paddingBottom: 5,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   backButton: {
     width: 40,

@@ -5,36 +5,34 @@ import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Image,
-  Modal,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import Animated, {
-  FadeInDown,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming
+    FadeInDown,
+    interpolate,
+    useAnimatedStyle,
+    useSharedValue,
+    withRepeat,
+    withTiming
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ThemedGlassCard from '../../components/ThemedGlassCard';
 import { useTheme } from '../../contexts/ThemeContext';
-import ComprehensiveMedicationService, { MedicationData, MedicationRecognitionResult } from '../../services/ComprehensiveMedicationService';
-import { MedicationDatabase, PopularMedication } from '../../utils/MedicationDatabase';
+import ComprehensiveFoodService, { FoodAnalysisResult, FoodData } from '../../services/ComprehensiveFoodService';
 
-// Modern Detail Row Component
+const { width } = Dimensions.get('window');
+
+// Detail Row Component
 const DetailRow: React.FC<{ label: string; value: string; theme: any }> = ({ label, value, theme }) => (
   <View style={styles.detailRow}>
     <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>{label}</Text>
@@ -42,63 +40,49 @@ const DetailRow: React.FC<{ label: string; value: string; theme: any }> = ({ lab
   </View>
 );
 
-// Enhanced Medication Scanner Screen
-const EnhancedMedicationScannerScreen: React.FC = () => {
+// Modern Food Scanner Screen
+const ModernFoodScanScreen: React.FC = () => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   
   // Enhanced state management
-  const [scanMode, setScanMode] = useState<'camera' | 'search' | 'results'>('camera');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [medicationData, setMedicationData] = useState<MedicationData | null>(null);
+  const [foodData, setFoodData] = useState<FoodData | null>(null);
+  const [scanMode, setScanMode] = useState<'camera' | 'results'>('camera');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [flashMode, setFlashMode] = useState<'off' | 'on' | 'auto'>('off');
   const [processingTime, setProcessingTime] = useState<number>(0);
   const [confidence, setConfidence] = useState<number>(0);
   const [sources, setSources] = useState<string[]>([]);
   
-  // Search functionality
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  
   // Animation values
   const scanAnimation = useSharedValue(0);
   const pulseAnimation = useSharedValue(1);
   
-  // Expandable sections state
+  // Expandable sections
   const [expandedSections, setExpandedSections] = useState({
-    summary: true,
-    details: true,
-    dosage: true,
-    safety: false,
-    interactions: false,
+    nutrition: true,
+    health: true,
+    ingredients: false,
+    freshness: true,
     advice: true,
   });
 
   useEffect(() => {
-    StatusBar.setBarStyle('light-content');
-    // Start scan animation
+    // Start animations
     scanAnimation.value = withRepeat(
       withTiming(1, { duration: 2000 }),
       -1,
       true
     );
-    // Start pulse animation
     pulseAnimation.value = withRepeat(
       withTiming(1.1, { duration: 1000 }),
       -1,
       true
     );
-
-    // Load initial popular medications
-    loadPopularMedications();
   }, [scanAnimation, pulseAnimation]);
-
-  const loadPopularMedications = () => {
-    // No longer needed - handled by filteredMedications
-  };
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
@@ -108,44 +92,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
-  // Select medication from search
-  const selectMedication = (medication: PopularMedication) => {
-    const medicationData = MedicationDatabase.convertToMedicationData(medication);
-    setMedicationData(medicationData);
-    setScanMode('results');
-    setShowSearchModal(false);
-    setConfidence(0.9);
-    setProcessingTime(500);
-    setSources(['Medication Database']);
-  };
-
-  // Handle medication selection from modal
-  const handleMedicationSelect = (medication: PopularMedication) => {
-    selectMedication(medication);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  };
-
-  // Filter medications based on search query
-  const filteredMedications = useMemo(() => {
-    return MedicationDatabase.searchMedications(searchQuery);
-  }, [searchQuery]);
-
-  // Animated scan line style
-  const animatedScanLineStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(scanAnimation.value, [0, 1], [-100, 100]);
-    return {
-      transform: [{ translateY }],
-    };
-  });
-
-  // Animated pulse style for capture button
-  const animatedPulseStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: pulseAnimation.value }],
-    };
-  });
-
-  // Enhanced photo capture with haptic feedback
+  // Enhanced photo capture
   const takePhoto = async () => {
     if (!cameraRef.current) return;
     
@@ -162,26 +109,25 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
       
       if (photo) {
         setCapturedImage(photo.uri);
-        console.log('📱 Analyzing medication with comprehensive AI service...');
+        console.log('🍎 Analyzing food with comprehensive AI service...');
         
-        const result: MedicationRecognitionResult = await ComprehensiveMedicationService.analyzeMedicationImage(photo.uri);
+        const result: FoodAnalysisResult = await ComprehensiveFoodService.analyzeFoodImage(photo.uri);
         
         setProcessingTime(Date.now() - startTime);
         setConfidence(result.confidence);
         setSources(result.sources);
         
         if (result.success && result.data) {
-          console.log(`✅ Medication identified: ${result.data.name} (${(result.confidence * 100).toFixed(1)}% confidence)`);
-          setMedicationData(result.data);
+          console.log(`✅ Food identified: ${result.data.name} (Health Score: ${result.data.healthScore})`);
+          setFoodData(result.data);
           setScanMode('results');
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         } else {
           Alert.alert(
             '🔍 Analysis Complete',
-            'No clear medication detected. Try adjusting lighting and ensure text is clearly visible.',
+            'Food detected but needs clearer image. Try better lighting or closer shot.',
             [
               { text: 'Try Again', style: 'default' },
-              { text: 'Search Manually', onPress: () => setShowSearchModal(true) },
               { text: 'Upload from Gallery', onPress: pickImageFromGallery }
             ]
           );
@@ -195,7 +141,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
     }
   };
 
-  // Enhanced gallery picker
+  // Gallery picker
   const pickImageFromGallery = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -206,118 +152,73 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
       });
 
       if (!result.canceled && result.assets[0]) {
+        setIsAnalyzing(true);
+        const startTime = Date.now();
         const imageUri = result.assets[0].uri;
         setCapturedImage(imageUri);
-        setIsAnalyzing(true);
-        
-        const startTime = Date.now();
-        const analysisResult: MedicationRecognitionResult = await ComprehensiveMedicationService.analyzeMedicationImage(imageUri);
+
+        const analysisResult = await ComprehensiveFoodService.analyzeFoodImage(imageUri);
         
         setProcessingTime(Date.now() - startTime);
         setConfidence(analysisResult.confidence);
         setSources(analysisResult.sources);
-        
+
         if (analysisResult.success && analysisResult.data) {
-          setMedicationData(analysisResult.data);
+          setFoodData(analysisResult.data);
           setScanMode('results');
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         } else {
-          Alert.alert(
-            'Analysis Results',
-            'Could not clearly identify the medication. You can search manually or try a different image.'
-          );
+          Alert.alert('Analysis Complete', 'No clear food detected in the selected image.');
         }
         setIsAnalyzing(false);
       }
     } catch (error) {
-      console.error('📱 Gallery picker error:', error);
-      Alert.alert('Error', 'Unable to select image from gallery.');
       setIsAnalyzing(false);
-    }
-  };
-
-  // Handle prescription refill
-  const handleRefillPrescription = () => {
-    Alert.alert(
-      '💊 Refill Prescription',
-      `Would you like to refill your prescription for ${medicationData?.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Contact Pharmacy', onPress: () => {
-          Alert.alert('📞 Pharmacy Contact', 'This feature will connect you to your preferred pharmacy for prescription refills.');
-        }},
-        { text: 'Order Online', onPress: () => {
-          // Navigate to CareHub for online ordering
-          router.push('/(tabs)/carehub');
-        }}
-      ]
-    );
-  };
-
-  // Handle add reminder
-  const handleAddReminder = () => {
-    Alert.alert(
-      '⏰ Set Medication Reminder',
-      `Set up reminders for ${medicationData?.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Daily Reminder', onPress: () => {
-          Alert.alert('✅ Reminder Set', 'Daily medication reminder has been set up successfully!');
-        }},
-        { text: 'Custom Schedule', onPress: () => {
-          Alert.alert('📅 Custom Reminder', 'Custom medication scheduling will be available in a future update.');
-        }}
-      ]
-    );
-  };
-
-  // Handle purchase medication
-  const handlePurchaseMedication = () => {
-    Alert.alert(
-      '🛒 Purchase Medication',
-      `Purchase ${medicationData?.name} through MedLynx CareHub?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'View in CareHub', onPress: () => {
-          router.push('/(tabs)/carehub');
-        }},
-        { text: 'Find Nearby Pharmacy', onPress: () => {
-          Alert.alert('🗺️ Find Pharmacy', 'This feature will help you locate nearby pharmacies with this medication in stock.');
-        }}
-      ]
-    );
-  };
-
-  // Get urgency color based on level
-  const getUrgencyColor = (level: string) => {
-    switch (level) {
-      case 'low': return '#4CAF50';
-      case 'medium': return '#FF9800';
-      case 'high': return '#FF5722';
-      case 'critical': return '#F44336';
-      default: return theme.colors.textSecondary;
-    }
-  };
-
-  const getUrgencyIcon = (level: string) => {
-    switch (level) {
-      case 'low': return 'checkmark-circle';
-      case 'medium': return 'warning';
-      case 'high': return 'alert-circle';
-      case 'critical': return 'medical';
-      default: return 'help-circle';
+      console.error('Gallery picker error:', error);
+      Alert.alert('Error', 'Unable to select image from gallery.');
     }
   };
 
   const resetScan = () => {
     setScanMode('camera');
-    setMedicationData(null);
+    setFoodData(null);
     setCapturedImage(null);
     setConfidence(0);
     setSources([]);
     setProcessingTime(0);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
+
+  // Helper functions
+  const getHealthScoreColor = (score: number) => {
+    if (score >= 80) return '#4CAF50';
+    if (score >= 60) return '#FF9800';
+    return '#F44336';
+  };
+
+  const getFreshnessColor = (level: string) => {
+    switch (level) {
+      case 'fresh': return '#4CAF50';
+      case 'good': return '#8BC34A';
+      case 'moderate': return '#FF9800';
+      case 'poor': return '#F44336';
+      default: return theme.colors.textSecondary;
+    }
+  };
+
+  // Animated styles
+  const animatedScanLineStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(scanAnimation.value, [0, 1], [-80, 80]);
+    return {
+      transform: [{ translateY }],
+    };
+  });
+
+  const animatedPulseStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: pulseAnimation.value }],
+    };
+  });
 
   // Permission states
   if (!permission) {
@@ -337,7 +238,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
               Camera Access Required
             </Text>
             <Text style={[styles.permissionText, { color: theme.colors.textSecondary }]}>
-              We need access to your camera to scan medications and provide accurate analysis with AI.
+              We need camera access to scan food and provide detailed nutritional analysis with AI.
             </Text>
             <TouchableOpacity
               style={[styles.permissionButton, { backgroundColor: theme.colors.primary }]}
@@ -352,7 +253,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
   }
 
   // Results Screen
-  if (scanMode === 'results' && medicationData) {
+  if (scanMode === 'results' && foodData) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <LinearGradient
@@ -367,7 +268,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
               <Ionicons name="arrow-back" size={24} color="white" />
             </BlurView>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>💊 Medication Analysis</Text>
+          <Text style={styles.headerTitle}>🍎 Food Analysis</Text>
           <TouchableOpacity style={styles.backButton} onPress={resetScan}>
             <BlurView intensity={20} style={styles.headerButton}>
               <Ionicons name="refresh" size={24} color="white" />
@@ -376,29 +277,33 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
         </View>
 
         <ScrollView style={styles.resultsContainer} showsVerticalScrollIndicator={false}>
-          {/* Analysis Summary Card */}
+          {/* Food Summary Card */}
           <Animated.View entering={FadeInDown.delay(100)}>
             <ThemedGlassCard style={styles.summaryCard}>
               <View style={styles.summaryHeader}>
-                <View style={styles.medicationIcon}>
+                <View style={styles.foodIcon}>
                   <LinearGradient
                     colors={[theme.colors.primary, theme.colors.secondary]}
                     style={styles.iconGradient}
                   >
-                    <Ionicons name="medical" size={24} color="white" />
+                    <Ionicons name="nutrition" size={24} color="white" />
                   </LinearGradient>
                 </View>
-                <View style={styles.medicationInfo}>
-                  <Text style={[styles.medicationName, { color: theme.colors.text }]}>
-                    {medicationData.name}
+                <View style={styles.foodInfo}>
+                  <Text style={[styles.foodName, { color: theme.colors.text }]}>
+                    {foodData.name}
                   </Text>
-                  <Text style={[styles.genericName, { color: theme.colors.textSecondary }]}>
-                    {medicationData.genericName}
+                  <Text style={[styles.foodCategory, { color: theme.colors.textSecondary }]}>
+                    {foodData.category}
                   </Text>
                 </View>
-                <View style={[styles.confidenceTag, { backgroundColor: theme.colors.primary + '20' }]}>
-                  <Text style={[styles.confidenceText, { color: theme.colors.primary }]}>
-                    {(confidence * 100).toFixed(0)}%
+                <View style={[styles.healthScoreTag, { 
+                  backgroundColor: getHealthScoreColor(foodData.healthScore) + '20' 
+                }]}>
+                  <Text style={[styles.healthScoreText, { 
+                    color: getHealthScoreColor(foodData.healthScore) 
+                  }]}>
+                    {foodData.healthScore}/100
                   </Text>
                 </View>
               </View>
@@ -419,20 +324,17 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
                 </View>
               </View>
 
-              {/* Urgency Indicator */}
-              <View style={[styles.urgencyContainer, { 
-                backgroundColor: getUrgencyColor(medicationData.urgencyLevel) + '15' 
-              }]}>
-                <Ionicons 
-                  name={getUrgencyIcon(medicationData.urgencyLevel) as any} 
-                  size={20} 
-                  color={getUrgencyColor(medicationData.urgencyLevel)} 
-                />
-                <Text style={[styles.urgencyText, { 
-                  color: getUrgencyColor(medicationData.urgencyLevel) 
-                }]}>
-                  {medicationData.urgencyLevel.charAt(0).toUpperCase() + medicationData.urgencyLevel.slice(1)} Priority
-                </Text>
+              {/* Dietary Tags */}
+              <View style={styles.tagsContainer}>
+                {foodData.dietaryTags.slice(0, 4).map((tag, index) => (
+                  <View key={index} style={[styles.dietaryTag, { 
+                    backgroundColor: theme.colors.primary + '15' 
+                  }]}>
+                    <Text style={[styles.dietaryTagText, { color: theme.colors.primary }]}>
+                      {tag}
+                    </Text>
+                  </View>
+                ))}
               </View>
             </ThemedGlassCard>
           </Animated.View>
@@ -446,72 +348,127 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
             </Animated.View>
           )}
 
-          {/* Medication Details */}
+          {/* Nutrition Facts */}
           <Animated.View entering={FadeInDown.delay(300)}>
             <ThemedGlassCard style={styles.detailsCard}>
               <TouchableOpacity 
                 style={styles.sectionHeader} 
-                onPress={() => toggleSection('details')}
+                onPress={() => toggleSection('nutrition')}
               >
                 <View style={styles.sectionTitleContainer}>
-                  <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
+                  <Ionicons name="bar-chart" size={20} color={theme.colors.primary} />
                   <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                    Medication Details
+                    Nutrition Facts
                   </Text>
                 </View>
                 <Ionicons 
-                  name={expandedSections.details ? 'chevron-up' : 'chevron-down'} 
+                  name={expandedSections.nutrition ? 'chevron-up' : 'chevron-down'} 
                   size={20} 
                   color={theme.colors.textSecondary} 
                 />
               </TouchableOpacity>
               
-              {expandedSections.details && (
+              {expandedSections.nutrition && (
                 <View style={styles.sectionContent}>
-                  <DetailRow label="Manufacturer" value={medicationData.manufacturer} theme={theme} />
-                  <DetailRow label="Strength" value={medicationData.strength} theme={theme} />
-                  <DetailRow label="Form" value={medicationData.dosageForm} theme={theme} />
-                  <DetailRow label="Drug Class" value={medicationData.drugClass} theme={theme} />
+                  <Text style={[styles.servingSize, { color: theme.colors.textSecondary }]}>
+                    Per {foodData.nutrition.servingSize}
+                  </Text>
+                  <View style={styles.nutritionGrid}>
+                    <DetailRow label="Calories" value={`${foodData.nutrition.calories}`} theme={theme} />
+                    <DetailRow label="Protein" value={`${foodData.nutrition.protein}g`} theme={theme} />
+                    <DetailRow label="Carbs" value={`${foodData.nutrition.carbs}g`} theme={theme} />
+                    <DetailRow label="Fat" value={`${foodData.nutrition.fat}g`} theme={theme} />
+                    <DetailRow label="Fiber" value={`${foodData.nutrition.fiber}g`} theme={theme} />
+                    <DetailRow label="Sugar" value={`${foodData.nutrition.sugar}g`} theme={theme} />
+                  </View>
                 </View>
               )}
             </ThemedGlassCard>
           </Animated.View>
 
-          {/* Dosage Instructions */}
+          {/* Health Benefits */}
           <Animated.View entering={FadeInDown.delay(400)}>
             <ThemedGlassCard style={styles.detailsCard}>
               <TouchableOpacity 
                 style={styles.sectionHeader} 
-                onPress={() => toggleSection('dosage')}
+                onPress={() => toggleSection('health')}
               >
                 <View style={styles.sectionTitleContainer}>
-                  <Ionicons name="timer" size={20} color={theme.colors.primary} />
+                  <Ionicons name="heart" size={20} color="#4CAF50" />
                   <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                    Dosage Instructions
+                    Health Benefits
                   </Text>
                 </View>
                 <Ionicons 
-                  name={expandedSections.dosage ? 'chevron-up' : 'chevron-down'} 
+                  name={expandedSections.health ? 'chevron-up' : 'chevron-down'} 
                   size={20} 
                   color={theme.colors.textSecondary} 
                 />
               </TouchableOpacity>
               
-              {expandedSections.dosage && (
+              {expandedSections.health && (
                 <View style={styles.sectionContent}>
-                  <Text style={[styles.dosageText, { color: theme.colors.text }]}>
-                    {medicationData.dosageInstructions}
-                  </Text>
-                  <Text style={[styles.indicationText, { color: theme.colors.textSecondary }]}>
-                    Used for: {medicationData.indication}
-                  </Text>
+                  {foodData.healthBenefits.map((benefit, index) => (
+                    <View key={index} style={styles.benefitItem}>
+                      <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                      <Text style={[styles.benefitText, { color: theme.colors.text }]}>
+                        {benefit}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
               )}
             </ThemedGlassCard>
           </Animated.View>
 
-          {/* Dr. LYNX AI Advice */}
-          <Animated.View entering={FadeInDown.delay(500)}>
+          {/* Freshness Analysis */}
+          {foodData.freshness && (
+            <Animated.View entering={FadeInDown.delay(500)}>
+              <ThemedGlassCard style={styles.detailsCard}>
+                <TouchableOpacity 
+                  style={styles.sectionHeader} 
+                  onPress={() => toggleSection('freshness')}
+                >
+                  <View style={styles.sectionTitleContainer}>
+                    <Ionicons name="leaf" size={20} color={getFreshnessColor(foodData.freshness.level)} />
+                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                      Freshness Analysis
+                    </Text>
+                  </View>
+                  <Ionicons 
+                    name={expandedSections.freshness ? 'chevron-up' : 'chevron-down'} 
+                    size={20} 
+                    color={theme.colors.textSecondary} 
+                  />
+                </TouchableOpacity>
+                
+                {expandedSections.freshness && (
+                  <View style={styles.sectionContent}>
+                    <View style={[styles.freshnessTag, { 
+                      backgroundColor: getFreshnessColor(foodData.freshness.level) + '20' 
+                    }]}>
+                      <Text style={[styles.freshnessText, { 
+                        color: getFreshnessColor(foodData.freshness.level) 
+                      }]}>
+                        {foodData.freshness.level.charAt(0).toUpperCase() + foodData.freshness.level.slice(1)}
+                      </Text>
+                    </View>
+                    {foodData.freshness.indicators.map((indicator, index) => (
+                      <Text key={index} style={[styles.indicatorText, { color: theme.colors.textSecondary }]}>
+                        • {indicator}
+                      </Text>
+                    ))}
+                    <Text style={[styles.shelfLifeText, { color: theme.colors.text }]}>
+                      Shelf life: {foodData.freshness.shelfLife}
+                    </Text>
+                  </View>
+                )}
+              </ThemedGlassCard>
+            </Animated.View>
+          )}
+
+          {/* AI Advice */}
+          <Animated.View entering={FadeInDown.delay(600)}>
             <ThemedGlassCard style={styles.adviceCard}>
               <TouchableOpacity 
                 style={styles.sectionHeader} 
@@ -525,7 +482,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
                     <Ionicons name="sparkles" size={16} color="white" />
                   </LinearGradient>
                   <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                    Dr. LYNX AI Advice
+                    AI Health Insights
                   </Text>
                 </View>
                 <Ionicons 
@@ -538,11 +495,11 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
               {expandedSections.advice && (
                 <View style={styles.sectionContent}>
                   <Text style={[styles.adviceText, { color: theme.colors.text }]}>
-                    {medicationData.drLynxAdvice}
+                    {foodData.aiInsights}
                   </Text>
-                  {medicationData.recommendations.map((rec, index) => (
+                  {foodData.recommendations.map((rec, index) => (
                     <View key={index} style={styles.recommendationItem}>
-                      <Ionicons name="checkmark-circle" size={16} color={theme.colors.primary} />
+                      <Ionicons name="bulb" size={16} color={theme.colors.primary} />
                       <Text style={[styles.recommendationText, { color: theme.colors.textSecondary }]}>
                         {rec}
                       </Text>
@@ -553,83 +510,15 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
             </ThemedGlassCard>
           </Animated.View>
 
-          {/* Safety Information */}
-          <Animated.View entering={FadeInDown.delay(600)}>
-            <ThemedGlassCard style={styles.detailsCard}>
-              <TouchableOpacity 
-                style={styles.sectionHeader} 
-                onPress={() => toggleSection('safety')}
-              >
-                <View style={styles.sectionTitleContainer}>
-                  <Ionicons name="shield-checkmark" size={20} color="#F44336" />
-                  <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                    Safety Information
-                  </Text>
-                </View>
-                <Ionicons 
-                  name={expandedSections.safety ? 'chevron-up' : 'chevron-down'} 
-                  size={20} 
-                  color={theme.colors.textSecondary} 
-                />
-              </TouchableOpacity>
-              
-              {expandedSections.safety && (
-                <View style={styles.sectionContent}>
-                  {medicationData.warnings.map((warning, index) => (
-                    <View key={index} style={styles.warningItem}>
-                      <Ionicons name="warning" size={16} color="#F44336" />
-                      <Text style={[styles.warningText, { color: theme.colors.text }]}>
-                        {warning}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </ThemedGlassCard>
-          </Animated.View>
-
           {/* Action Buttons */}
           <Animated.View entering={FadeInDown.delay(700)} style={styles.actionContainer}>
-            {/* Medication Action Buttons */}
-            <View style={styles.medicationActions}>
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.colors.primary + '20' }]}
-                onPress={handleRefillPrescription}
-              >
-                <Ionicons name="refresh" size={20} color={theme.colors.primary} />
-                <Text style={[styles.actionButtonText, { color: theme.colors.primary }]}>
-                  Refill Prescription
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.colors.secondary + '20' }]}
-                onPress={handleAddReminder}
-              >
-                <Ionicons name="alarm" size={20} color={theme.colors.secondary} />
-                <Text style={[styles.actionButtonText, { color: theme.colors.secondary }]}>
-                  Set Reminder
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: '#4CAF50' + '20' }]}
-                onPress={handlePurchaseMedication}
-              >
-                <Ionicons name="storefront" size={20} color="#4CAF50" />
-                <Text style={[styles.actionButtonText, { color: '#4CAF50' }]}>
-                  Purchase
-                </Text>
-              </TouchableOpacity>
-            </View>
-
             <TouchableOpacity style={styles.scanAgainButton} onPress={resetScan}>
               <LinearGradient
                 colors={[theme.colors.primary, theme.colors.secondary]}
                 style={styles.scanAgainGradient}
               >
                 <Ionicons name="camera" size={20} color="white" />
-                <Text style={styles.scanAgainText}>Scan Another Medication</Text>
+                <Text style={styles.scanAgainText}>Scan Another Food</Text>
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
@@ -655,7 +544,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
             <Ionicons name="arrow-back" size={24} color="white" />
           </BlurView>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>💊 MedScan AI</Text>
+        <Text style={styles.headerTitle}>🍎 FoodScan AI</Text>
         <TouchableOpacity 
           style={styles.backButton} 
           onPress={() => setFlashMode(flashMode === 'off' ? 'on' : 'off')}
@@ -677,7 +566,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
         facing="back"
         flash={flashMode}
       >
-        {/* Scan Frame with Animation */}
+        {/* Scan Frame */}
         <View style={styles.scanFrame}>
           <View style={styles.scanCorners}>
             <View style={[styles.corner, styles.topLeft]} />
@@ -685,32 +574,28 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
             <View style={[styles.corner, styles.bottomLeft]} />
             <View style={[styles.corner, styles.bottomRight]} />
           </View>
-          
-          {/* Animated Scan Line */}
           <Animated.View style={[styles.scanLine, animatedScanLineStyle]} />
         </View>
 
-        {/* Instructions Card */}
+        {/* Instructions */}
         <View style={styles.instructionsContainer}>
           <BlurView intensity={80} style={styles.instructionsCard}>
-            <Ionicons name="medical" size={24} color={theme.colors.primary} />
-            <Text style={styles.instructionsTitle}>Smart Medication Scanner</Text>
+            <Ionicons name="nutrition" size={24} color={theme.colors.primary} />
+            <Text style={styles.instructionsTitle}>Smart Food Scanner</Text>
             <Text style={styles.instructionsText}>
-              Position medication clearly within the frame. AI will analyze text, barcodes, and visual features.
+              Position food clearly within the frame. AI will analyze nutrition, freshness, and health benefits.
             </Text>
           </BlurView>
         </View>
 
         {/* Controls */}
         <View style={styles.controls}>
-          {/* Gallery Button */}
           <TouchableOpacity style={styles.controlButton} onPress={pickImageFromGallery}>
             <BlurView intensity={40} style={styles.controlButtonInner}>
               <Ionicons name="images" size={24} color="white" />
             </BlurView>
           </TouchableOpacity>
 
-          {/* Capture Button */}
           <Animated.View style={[styles.captureButtonContainer, animatedPulseStyle]}>
             <TouchableOpacity 
               style={[styles.captureButton, isAnalyzing && styles.capturingButton]} 
@@ -733,96 +618,13 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
             </TouchableOpacity>
           </Animated.View>
 
-          {/* Search Button */}
-          <TouchableOpacity 
-            style={styles.controlButton}
-            onPress={() => setShowSearchModal(true)}
-          >
+          <TouchableOpacity style={styles.controlButton}>
             <BlurView intensity={40} style={styles.controlButtonInner}>
-              <Ionicons name="search" size={24} color="white" />
+              <Ionicons name="information-circle" size={24} color="white" />
             </BlurView>
           </TouchableOpacity>
         </View>
       </CameraView>
-
-      {/* Search Modal for Manual Medication Entry */}
-      <Modal
-        visible={showSearchModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowSearchModal(false)}
-      >
-        <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
-          <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-              💊 Search Medications
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowSearchModal(false)}
-              style={styles.closeButton}
-            >
-              <Ionicons name="close" size={24} color={theme.colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.searchContainer}>
-            <View style={[styles.searchInputContainer, { backgroundColor: theme.colors.inputBackground }]}>
-              <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
-              <TextInput
-                style={[styles.searchInput, { color: theme.colors.text }]}
-                placeholder="Type medication name..."
-                placeholderTextColor={theme.colors.textSecondary}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoFocus
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Ionicons name="close-circle" size={20} color={theme.colors.textSecondary} />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          <FlatList
-            data={filteredMedications}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.medicationItem, { borderBottomColor: theme.colors.border }]}
-                onPress={() => handleMedicationSelect(item)}
-              >
-                <View style={styles.medicationInfo}>
-                  <Text style={[styles.medicationName, { color: theme.colors.text }]}>
-                    {item.name}
-                  </Text>
-                  <Text style={[styles.medicationGeneric, { color: theme.colors.textSecondary }]}>
-                    {item.genericName}
-                  </Text>
-                  <Text style={[styles.medicationDescription, { color: theme.colors.textSecondary }]}>
-                    {item.indication}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            )}
-            style={styles.medicationList}
-            showsVerticalScrollIndicator={false}
-          />
-
-          {filteredMedications.length === 0 && searchQuery.length > 0 && (
-            <View style={styles.noResultsContainer}>
-              <Ionicons name="search" size={64} color={theme.colors.textSecondary} />
-              <Text style={[styles.noResultsText, { color: theme.colors.textSecondary }]}>
-                No medications found for &quot;{searchQuery}&quot;
-              </Text>
-              <Text style={[styles.noResultsSubtext, { color: theme.colors.textSecondary }]}>
-                Try searching with a different name or generic name
-              </Text>
-            </View>
-          )}
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -903,7 +705,7 @@ const styles = StyleSheet.create({
     top: '30%',
     left: '10%',
     right: '10%',
-    height: 200,
+    height: 160,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -912,8 +714,8 @@ const styles = StyleSheet.create({
   },
   corner: {
     position: 'absolute',
-    width: 30,
-    height: 30,
+    width: 25,
+    height: 25,
     borderColor: '#00E5FF',
     borderWidth: 3,
   },
@@ -952,7 +754,7 @@ const styles = StyleSheet.create({
   },
   instructionsContainer: {
     position: 'absolute',
-    top: '65%',
+    top: '60%',
     left: 20,
     right: 20,
   },
@@ -1039,7 +841,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
   },
-  medicationIcon: {
+  foodIcon: {
     marginRight: 15,
   },
   iconGradient: {
@@ -1049,24 +851,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  medicationInfo: {
+  foodInfo: {
     flex: 1,
   },
-  medicationName: {
+  foodName: {
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 2,
   },
-  genericName: {
+  foodCategory: {
     fontSize: 14,
     opacity: 0.8,
   },
-  confidenceTag: {
+  healthScoreTag: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
-  confidenceText: {
+  healthScoreText: {
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1083,16 +885,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 5,
   },
-  urgencyContainer: {
+  tagsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 10,
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  urgencyText: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
+  dietaryTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  dietaryTagText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   imageCard: {
     padding: 10,
@@ -1141,6 +946,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
+  servingSize: {
+    fontSize: 14,
+    marginBottom: 10,
+    fontStyle: 'italic',
+  },
+  nutritionGrid: {
+    gap: 8,
+  },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1157,15 +970,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  dosageText: {
-    fontSize: 16,
-    lineHeight: 24,
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  benefitText: {
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 20,
+  },
+  freshnessTag: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
     marginBottom: 10,
   },
-  indicationText: {
+  freshnessText: {
     fontSize: 14,
-    opacity: 0.8,
-    fontStyle: 'italic',
+    fontWeight: '600',
+  },
+  indicatorText: {
+    fontSize: 14,
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  shelfLifeText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: 8,
   },
   adviceText: {
     fontSize: 16,
@@ -1183,39 +1018,8 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
-  warningItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 10,
-  },
-  warningText: {
-    fontSize: 14,
-    marginLeft: 8,
-    flex: 1,
-    lineHeight: 20,
-  },
   actionContainer: {
     paddingVertical: 20,
-  },
-  medicationActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    paddingHorizontal: 5,
-  },
-  actionButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 15,
-    marginHorizontal: 5,
-  },
-  actionButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
-    textAlign: 'center',
   },
   scanAgainButton: {
     borderRadius: 25,
@@ -1239,83 +1043,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
-  // Search Modal Styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  closeButton: {
-    padding: 5,
-  },
-  searchContainer: {
-    padding: 20,
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 15,
-    backgroundColor: '#f5f5f5',
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    marginLeft: 10,
-    marginRight: 10,
-  },
-  medicationList: {
-    flex: 1,
-  },
-  medicationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  medicationGeneric: {
-    fontSize: 14,
-    fontWeight: '500',
-    opacity: 0.8,
-    marginBottom: 2,
-  },
-  medicationDescription: {
-    fontSize: 12,
-    opacity: 0.6,
-    lineHeight: 16,
-  },
-  noResultsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  noResultsText: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  noResultsSubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    opacity: 0.7,
-    lineHeight: 20,
-  },
 });
 
-export default EnhancedMedicationScannerScreen;
+export default ModernFoodScanScreen;

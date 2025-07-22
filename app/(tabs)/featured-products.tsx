@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -13,6 +12,7 @@ import {
     View,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import ModernProductCard from '../../components/ModernProductCard';
 import { StandardHeader } from '../../components/StandardHeader';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -214,126 +214,42 @@ export default function FeaturedProductsScreen() {
     setCartItems(prev => [...prev, productId]);
   };
 
+  const addToCartWithQuantity = (productId: string, quantity: number) => {
+    setCartItems(prev => [...prev.filter(id => id !== productId), productId]);
+    console.log(`Added ${quantity}x ${productId} to cart`);
+  };
+
   const removeFromCart = (productId: string) => {
     setCartItems(prev => prev.filter(id => id !== productId));
   };
 
   const renderProduct = ({ item: product, index }: { item: FeaturedProduct; index: number }) => {
     const isInCart = cartItems.includes(product.id);
-    const discount = product.originalPrice ? 
-      Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
     
     return (
       <Animated.View
         entering={FadeInDown.delay(50 * index)}
-        style={[styles.productCard, { backgroundColor: theme.colors.surface }]}
+        style={styles.productCardContainer}
       >
-        <TouchableOpacity
-          style={styles.productCardContent}
-          onPress={() => router.push(`/pharmacy-store?id=${product.pharmacy.toLowerCase()}` as any)}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={[`${product.pharmacyColor}08`, `${product.pharmacyColor}03`]}
-            style={styles.productGradient}
-          >
-            <View style={styles.productHeader}>
-              <View style={styles.productImageContainer}>
-                <Text style={styles.productEmoji}>{product.image}</Text>
-                
-                {discount > 0 && (
-                  <View style={[styles.discountBadge, { backgroundColor: '#FF6B35' }]}>
-                    <Text style={styles.discountText}>-{discount}%</Text>
-                  </View>
-                )}
-                
-                {product.featured && (
-                  <View style={[styles.featuredBadge, { backgroundColor: '#FFD700' }]}>
-                    <Ionicons name="star" size={12} color="#FFFFFF" />
-                  </View>
-                )}
-                
-                {product.bestSeller && (
-                  <View style={[styles.bestSellerBadge, { backgroundColor: '#10B981' }]}>
-                    <Text style={styles.badgeText}>Best</Text>
-                  </View>
-                )}
-                
-                {product.prescription && (
-                  <View style={[styles.prescriptionBadge, { backgroundColor: '#8E44AD' }]}>
-                    <Ionicons name="medical" size={12} color="#FFFFFF" />
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.productInfo}>
-                <Text style={[styles.productName, { color: theme.colors.textPrimary }]} numberOfLines={2}>
-                  {product.name}
-                </Text>
-                
-                <Text style={[styles.productDescription, { color: theme.colors.textSecondary }]} numberOfLines={2}>
-                  {product.description}
-                </Text>
-
-                <View style={styles.ratingContainer}>
-                  <Ionicons name="star" size={14} color="#FFD700" />
-                  <Text style={[styles.ratingText, { color: theme.colors.textPrimary }]}>
-                    {product.rating}
-                  </Text>
-                  <Text style={[styles.reviewText, { color: theme.colors.textSecondary }]}>
-                    ({product.reviews})
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.productFooter}>
-              <View style={styles.pharmacyTag}>
-                <Ionicons name="storefront" size={12} color={product.pharmacyColor} />
-                <Text style={[styles.pharmacyText, { color: product.pharmacyColor }]}>
-                  {product.pharmacy}
-                </Text>
-              </View>
-
-              <View style={styles.priceContainer}>
-                <Text style={[styles.price, { color: product.pharmacyColor }]}>
-                  R{product.price.toFixed(2)}
-                </Text>
-                {product.originalPrice && (
-                  <Text style={[styles.originalPrice, { color: theme.colors.textSecondary }]}>
-                    R{product.originalPrice.toFixed(2)}
-                  </Text>
-                )}
-              </View>
-            </View>
-
-            {product.inStock ? (
-              <TouchableOpacity
-                style={[
-                  styles.addToCartButton,
-                  {
-                    backgroundColor: isInCart ? '#10B981' : product.pharmacyColor
-                  }
-                ]}
-                onPress={() => isInCart ? removeFromCart(product.id) : addToCart(product.id)}
-              >
-                <Ionicons
-                  name={isInCart ? "checkmark" : "cart"}
-                  size={16}
-                  color="#FFFFFF"
-                />
-                <Text style={styles.addToCartText}>
-                  {isInCart ? 'Added' : 'Add to Cart'}
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={[styles.outOfStockButton, { backgroundColor: theme.colors.textSecondary }]}>
-                <Ionicons name="close-circle" size={16} color="#FFFFFF" />
-                <Text style={styles.outOfStockText}>Out of Stock</Text>
-              </View>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+        <ModernProductCard
+          id={product.id}
+          name={product.name}
+          price={product.price}
+          originalPrice={product.originalPrice}
+          image={product.image}
+          pharmacy={product.pharmacy}
+          pharmacyColor={product.pharmacyColor}
+          inStock={product.inStock}
+          featured={product.featured}
+          description={product.description}
+          bestSeller={product.bestSeller}
+          prescription={product.prescription}
+          rating={product.rating}
+          reviews={product.reviews}
+          onAddToCart={(productId, quantity) => addToCartWithQuantity(productId, quantity)}
+          onViewDetails={() => router.push(`/pharmacy-store?id=${product.pharmacy.toLowerCase()}` as any)}
+          style={{ flex: 1 }}
+        />
       </Animated.View>
     );
   };
@@ -551,6 +467,10 @@ const styles = StyleSheet.create({
   },
   productRow: {
     justifyContent: 'space-between',
+  },
+  productCardContainer: {
+    width: '48%',
+    marginBottom: 16,
   },
   productCard: {
     width: '48%',

@@ -141,6 +141,7 @@ export default function DoctorCard({ doctor, onPress, variant = 'home' }: Doctor
 const createStyles = (colors: any) => StyleSheet.create({
   homeCard: {
     width: width * 0.6,
+    height: 320, // Fixed height for consistent sizing
     marginRight: 16,
     backgroundColor: colors.surface,
     borderRadius: 28,
@@ -156,6 +157,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   listCard: {
     width: '100%',
+    height: 140, // Fixed height for list variant
     marginBottom: 16,
     backgroundColor: colors.surface,
     borderRadius: 28,
@@ -201,7 +203,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginRight: 6,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 9, // Reduced from 11
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -261,7 +263,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   ratingText: {
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
     fontWeight: '800',
     color: '#FFFFFF',
     marginLeft: 4,
@@ -273,10 +275,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     zIndex: 5,
   },
   doctorName: {
-    fontSize: 18,
+    fontSize: 14, // Reduced from larger size
     fontWeight: '800',
-    marginBottom: 8,
     textAlign: 'center',
+    marginBottom: 12,
     letterSpacing: 0.3,
   },
   specializationContainer: {
@@ -287,7 +289,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginBottom: 16,
   },
   doctorSpecialization: {
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
     fontWeight: '700',
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -321,12 +323,12 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginRight: 8,
   },
   doctorLocation: {
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
     fontWeight: '600',
     flex: 1,
   },
   doctorExperience: {
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
     fontWeight: '600',
     flex: 1,
   },
@@ -343,7 +345,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     width: '100%',
   },
   consultationFeeLabel: {
-    fontSize: 10,
+    fontSize: 8, // Reduced from 10
     color: 'rgba(255,255,255,0.9)',
     marginBottom: 4,
     fontWeight: '600',
@@ -351,7 +353,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     letterSpacing: 0.8,
   },
   consultationFee: {
-    fontSize: 16,
+    fontSize: 14, // Reduced from 16
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: 0.3,

@@ -5,34 +5,33 @@ import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Image,
-  Modal,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Image,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import Animated, {
-  FadeInDown,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming
+    FadeInDown,
+    interpolate,
+    useAnimatedStyle,
+    useSharedValue,
+    withRepeat,
+    withTiming
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ThemedGlassCard from '../../components/ThemedGlassCard';
 import { useTheme } from '../../contexts/ThemeContext';
 import ComprehensiveMedicationService, { MedicationData, MedicationRecognitionResult } from '../../services/ComprehensiveMedicationService';
-import { MedicationDatabase, PopularMedication } from '../../utils/MedicationDatabase';
+
+const { width, height } = Dimensions.get('window');
 
 // Modern Detail Row Component
 const DetailRow: React.FC<{ label: string; value: string; theme: any }> = ({ label, value, theme }) => (
@@ -42,26 +41,22 @@ const DetailRow: React.FC<{ label: string; value: string; theme: any }> = ({ lab
   </View>
 );
 
-// Enhanced Medication Scanner Screen
-const EnhancedMedicationScannerScreen: React.FC = () => {
+// Modern Medication Scanner Screen
+const ModernMedicationScannerScreen: React.FC = () => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   
   // Enhanced state management
-  const [scanMode, setScanMode] = useState<'camera' | 'search' | 'results'>('camera');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [medicationData, setMedicationData] = useState<MedicationData | null>(null);
+  const [scanMode, setScanMode] = useState<'camera' | 'results'>('camera');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [flashMode, setFlashMode] = useState<'off' | 'on' | 'auto'>('off');
   const [processingTime, setProcessingTime] = useState<number>(0);
   const [confidence, setConfidence] = useState<number>(0);
   const [sources, setSources] = useState<string[]>([]);
-  
-  // Search functionality
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchModal, setShowSearchModal] = useState(false);
   
   // Animation values
   const scanAnimation = useSharedValue(0);
@@ -69,7 +64,6 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
   
   // Expandable sections state
   const [expandedSections, setExpandedSections] = useState({
-    summary: true,
     details: true,
     dosage: true,
     safety: false,
@@ -91,14 +85,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
       -1,
       true
     );
-
-    // Load initial popular medications
-    loadPopularMedications();
-  }, [scanAnimation, pulseAnimation]);
-
-  const loadPopularMedications = () => {
-    // No longer needed - handled by filteredMedications
-  };
+  }, []);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
@@ -107,28 +94,6 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
     }));
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
-
-  // Select medication from search
-  const selectMedication = (medication: PopularMedication) => {
-    const medicationData = MedicationDatabase.convertToMedicationData(medication);
-    setMedicationData(medicationData);
-    setScanMode('results');
-    setShowSearchModal(false);
-    setConfidence(0.9);
-    setProcessingTime(500);
-    setSources(['Medication Database']);
-  };
-
-  // Handle medication selection from modal
-  const handleMedicationSelect = (medication: PopularMedication) => {
-    selectMedication(medication);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  };
-
-  // Filter medications based on search query
-  const filteredMedications = useMemo(() => {
-    return MedicationDatabase.searchMedications(searchQuery);
-  }, [searchQuery]);
 
   // Animated scan line style
   const animatedScanLineStyle = useAnimatedStyle(() => {
@@ -181,7 +146,6 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
             'No clear medication detected. Try adjusting lighting and ensure text is clearly visible.',
             [
               { text: 'Try Again', style: 'default' },
-              { text: 'Search Manually', onPress: () => setShowSearchModal(true) },
               { text: 'Upload from Gallery', onPress: pickImageFromGallery }
             ]
           );
@@ -195,7 +159,7 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
     }
   };
 
-  // Enhanced gallery picker
+  // Enhanced image picker from gallery
   const pickImageFromGallery = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -206,96 +170,42 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
       });
 
       if (!result.canceled && result.assets[0]) {
+        setIsAnalyzing(true);
+        const startTime = Date.now();
         const imageUri = result.assets[0].uri;
         setCapturedImage(imageUri);
-        setIsAnalyzing(true);
-        
-        const startTime = Date.now();
-        const analysisResult: MedicationRecognitionResult = await ComprehensiveMedicationService.analyzeMedicationImage(imageUri);
+
+        console.log('🖼️ Analyzing uploaded image...');
+        const analysisResult = await ComprehensiveMedicationService.analyzeMedicationImage(imageUri);
         
         setProcessingTime(Date.now() - startTime);
         setConfidence(analysisResult.confidence);
         setSources(analysisResult.sources);
-        
+
         if (analysisResult.success && analysisResult.data) {
           setMedicationData(analysisResult.data);
           setScanMode('results');
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         } else {
-          Alert.alert(
-            'Analysis Results',
-            'Could not clearly identify the medication. You can search manually or try a different image.'
-          );
+          Alert.alert('Analysis Complete', 'No medication detected in the selected image.');
         }
         setIsAnalyzing(false);
       }
     } catch (error) {
-      console.error('📱 Gallery picker error:', error);
-      Alert.alert('Error', 'Unable to select image from gallery.');
       setIsAnalyzing(false);
+      console.error('Gallery picker error:', error);
+      Alert.alert('Error', 'Unable to select image from gallery.');
     }
   };
 
-  // Handle prescription refill
-  const handleRefillPrescription = () => {
-    Alert.alert(
-      '💊 Refill Prescription',
-      `Would you like to refill your prescription for ${medicationData?.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Contact Pharmacy', onPress: () => {
-          Alert.alert('📞 Pharmacy Contact', 'This feature will connect you to your preferred pharmacy for prescription refills.');
-        }},
-        { text: 'Order Online', onPress: () => {
-          // Navigate to CareHub for online ordering
-          router.push('/(tabs)/carehub');
-        }}
-      ]
-    );
-  };
-
-  // Handle add reminder
-  const handleAddReminder = () => {
-    Alert.alert(
-      '⏰ Set Medication Reminder',
-      `Set up reminders for ${medicationData?.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Daily Reminder', onPress: () => {
-          Alert.alert('✅ Reminder Set', 'Daily medication reminder has been set up successfully!');
-        }},
-        { text: 'Custom Schedule', onPress: () => {
-          Alert.alert('📅 Custom Reminder', 'Custom medication scheduling will be available in a future update.');
-        }}
-      ]
-    );
-  };
-
-  // Handle purchase medication
-  const handlePurchaseMedication = () => {
-    Alert.alert(
-      '🛒 Purchase Medication',
-      `Purchase ${medicationData?.name} through MedLynx CareHub?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'View in CareHub', onPress: () => {
-          router.push('/(tabs)/carehub');
-        }},
-        { text: 'Find Nearby Pharmacy', onPress: () => {
-          Alert.alert('🗺️ Find Pharmacy', 'This feature will help you locate nearby pharmacies with this medication in stock.');
-        }}
-      ]
-    );
-  };
-
-  // Get urgency color based on level
+  // Helper functions for urgency display
   const getUrgencyColor = (level: string) => {
     switch (level) {
       case 'low': return '#4CAF50';
       case 'medium': return '#FF9800';
-      case 'high': return '#FF5722';
-      case 'critical': return '#F44336';
-      default: return theme.colors.textSecondary;
+      case 'high': return '#F44336';
+      case 'critical': return '#E91E63';
+      default: return theme.colors.text;
     }
   };
 
@@ -590,39 +500,6 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
 
           {/* Action Buttons */}
           <Animated.View entering={FadeInDown.delay(700)} style={styles.actionContainer}>
-            {/* Medication Action Buttons */}
-            <View style={styles.medicationActions}>
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.colors.primary + '20' }]}
-                onPress={handleRefillPrescription}
-              >
-                <Ionicons name="refresh" size={20} color={theme.colors.primary} />
-                <Text style={[styles.actionButtonText, { color: theme.colors.primary }]}>
-                  Refill Prescription
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.colors.secondary + '20' }]}
-                onPress={handleAddReminder}
-              >
-                <Ionicons name="alarm" size={20} color={theme.colors.secondary} />
-                <Text style={[styles.actionButtonText, { color: theme.colors.secondary }]}>
-                  Set Reminder
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: '#4CAF50' + '20' }]}
-                onPress={handlePurchaseMedication}
-              >
-                <Ionicons name="storefront" size={20} color="#4CAF50" />
-                <Text style={[styles.actionButtonText, { color: '#4CAF50' }]}>
-                  Purchase
-                </Text>
-              </TouchableOpacity>
-            </View>
-
             <TouchableOpacity style={styles.scanAgainButton} onPress={resetScan}>
               <LinearGradient
                 colors={[theme.colors.primary, theme.colors.secondary]}
@@ -733,96 +610,14 @@ const EnhancedMedicationScannerScreen: React.FC = () => {
             </TouchableOpacity>
           </Animated.View>
 
-          {/* Search Button */}
-          <TouchableOpacity 
-            style={styles.controlButton}
-            onPress={() => setShowSearchModal(true)}
-          >
+          {/* Info Button */}
+          <TouchableOpacity style={styles.controlButton}>
             <BlurView intensity={40} style={styles.controlButtonInner}>
-              <Ionicons name="search" size={24} color="white" />
+              <Ionicons name="information-circle" size={24} color="white" />
             </BlurView>
           </TouchableOpacity>
         </View>
       </CameraView>
-
-      {/* Search Modal for Manual Medication Entry */}
-      <Modal
-        visible={showSearchModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowSearchModal(false)}
-      >
-        <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
-          <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-              💊 Search Medications
-            </Text>
-            <TouchableOpacity
-              onPress={() => setShowSearchModal(false)}
-              style={styles.closeButton}
-            >
-              <Ionicons name="close" size={24} color={theme.colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.searchContainer}>
-            <View style={[styles.searchInputContainer, { backgroundColor: theme.colors.inputBackground }]}>
-              <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
-              <TextInput
-                style={[styles.searchInput, { color: theme.colors.text }]}
-                placeholder="Type medication name..."
-                placeholderTextColor={theme.colors.textSecondary}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoFocus
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Ionicons name="close-circle" size={20} color={theme.colors.textSecondary} />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          <FlatList
-            data={filteredMedications}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.medicationItem, { borderBottomColor: theme.colors.border }]}
-                onPress={() => handleMedicationSelect(item)}
-              >
-                <View style={styles.medicationInfo}>
-                  <Text style={[styles.medicationName, { color: theme.colors.text }]}>
-                    {item.name}
-                  </Text>
-                  <Text style={[styles.medicationGeneric, { color: theme.colors.textSecondary }]}>
-                    {item.genericName}
-                  </Text>
-                  <Text style={[styles.medicationDescription, { color: theme.colors.textSecondary }]}>
-                    {item.indication}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            )}
-            style={styles.medicationList}
-            showsVerticalScrollIndicator={false}
-          />
-
-          {filteredMedications.length === 0 && searchQuery.length > 0 && (
-            <View style={styles.noResultsContainer}>
-              <Ionicons name="search" size={64} color={theme.colors.textSecondary} />
-              <Text style={[styles.noResultsText, { color: theme.colors.textSecondary }]}>
-                No medications found for &quot;{searchQuery}&quot;
-              </Text>
-              <Text style={[styles.noResultsSubtext, { color: theme.colors.textSecondary }]}>
-                Try searching with a different name or generic name
-              </Text>
-            </View>
-          )}
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -1197,26 +992,6 @@ const styles = StyleSheet.create({
   actionContainer: {
     paddingVertical: 20,
   },
-  medicationActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    paddingHorizontal: 5,
-  },
-  actionButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 15,
-    marginHorizontal: 5,
-  },
-  actionButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
-    textAlign: 'center',
-  },
   scanAgainButton: {
     borderRadius: 25,
     overflow: 'hidden',
@@ -1239,83 +1014,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
-  // Search Modal Styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  closeButton: {
-    padding: 5,
-  },
-  searchContainer: {
-    padding: 20,
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 15,
-    backgroundColor: '#f5f5f5',
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    marginLeft: 10,
-    marginRight: 10,
-  },
-  medicationList: {
-    flex: 1,
-  },
-  medicationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  medicationGeneric: {
-    fontSize: 14,
-    fontWeight: '500',
-    opacity: 0.8,
-    marginBottom: 2,
-  },
-  medicationDescription: {
-    fontSize: 12,
-    opacity: 0.6,
-    lineHeight: 16,
-  },
-  noResultsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  noResultsText: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  noResultsSubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    opacity: 0.7,
-    lineHeight: 20,
-  },
 });
 
-export default EnhancedMedicationScannerScreen;
+export default ModernMedicationScannerScreen;

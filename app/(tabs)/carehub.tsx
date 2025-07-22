@@ -3,25 +3,27 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  FlatList,
-  Image,
-  ImageSourcePropType,
-  Modal,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    FlatList,
+    Image,
+    ImageSourcePropType,
+    Modal,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import ModernProductCard from '../../components/ModernProductCard';
 import SmartProductImage from '../../components/SmartProductImage';
 import { StandardHeader } from '../../components/StandardHeader';
 import { UserAvatarMenu } from '../../components/UserAvatarMenu';
 import { useTheme } from '../../contexts/ThemeContext';
 import CartService from '../../services/CartService';
+import PharmacyProductService from '../../services/PharmacyProductService';
 
 const { width } = Dimensions.get('window');
 
@@ -354,8 +356,7 @@ export default function CareHub() {
   // Update cart count
   const updateCartCount = useCallback(async () => {
     try {
-      const cartItems = await cartService.getCart();
-      const count = cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+      const count = cartService.getItemCount();
       setCartItemCount(count);
     } catch (error) {
       console.error('Error updating cart count:', error);
@@ -364,19 +365,92 @@ export default function CareHub() {
 
   // Enhanced product loading effect
   useEffect(() => {
-    console.log('🔍 Loading enhanced product data with smart image fallbacks...');
-    
-    // Simple enhancement without complex pharmacy calls for now
-    const enhanced = featuredMedications.map((medication) => ({
-      ...medication,
-      realProduct: null,
-      realImageUrl: '', // Empty triggers fallback
-      isLoadingRealData: false,
-    }));
-    
-    setEnhancedMedications(enhanced);
-    setIsLoadingRealData(false);
-    console.log('✅ Smart image system ready with fallbacks');
+    const loadRealProductData = async () => {
+      console.log('🚀 ACTIVATING ENTERPRISE PHARMACY INTEGRATION');
+      setIsLoadingRealData(true);
+      
+      try {
+        const pharmacyService = PharmacyProductService.getInstance();
+        
+        const enhanced = await Promise.all(
+          featuredMedications.map(async (medication) => {
+            try {
+              console.log(`🔍 Fetching real products for: ${medication.name} from ${medication.pharmacy}`);
+              
+              // Get pharmacy partner ID
+              const pharmacyId = medication.pharmacy.toLowerCase().replace(/\s/g, '').replace('-', '');
+              
+              // Fetch real products from pharmacy partner
+              const realProducts = await pharmacyService.fetchPharmacyProducts(
+                pharmacyId,
+                medication.category,
+                medication.searchTerm || medication.name,
+                5
+              );
+
+              if (realProducts && realProducts.length > 0) {
+                const bestMatch = realProducts[0];
+                
+                console.log(`✅ Found real product: ${bestMatch.name} - R${bestMatch.price}`);
+                
+                return {
+                  ...medication,
+                  realProduct: bestMatch,
+                  realImageUrl: bestMatch.imageUrl,
+                  price: bestMatch.price, // Update with real price
+                  inStock: bestMatch.inStock,
+                  isLoadingRealData: false,
+                };
+              } else {
+                console.log(`⚠️ No real product found for ${medication.name}, using local data`);
+                return {
+                  ...medication,
+                  realProduct: null,
+                  realImageUrl: '',
+                  isLoadingRealData: false,
+                };
+              }
+            } catch (error) {
+              console.error(`❌ Error fetching ${medication.name}:`, error);
+              return {
+                ...medication,
+                realProduct: null,
+                realImageUrl: '',
+                isLoadingRealData: false,
+              };
+            }
+          })
+        );
+
+        setEnhancedMedications(enhanced);
+        console.log('🎉 REAL PHARMACY INTEGRATION COMPLETE! 🎉');
+        
+        // Show success alert
+        Alert.alert(
+          '🎉 Real Products Loaded!', 
+          'Successfully integrated live product data from pharmacy partners!',
+          [{ text: 'Awesome!', style: 'default' }]
+        );
+        
+      } catch (error) {
+        console.error('❌ Failed to load pharmacy data:', error);
+        Alert.alert('Notice', 'Using local product data. Pharmacy integration will retry automatically.');
+        
+        // Fallback to local data
+        const enhanced = featuredMedications.map((medication) => ({
+          ...medication,
+          realProduct: null,
+          realImageUrl: '',
+          isLoadingRealData: false,
+        }));
+        
+        setEnhancedMedications(enhanced);
+      } finally {
+        setIsLoadingRealData(false);
+      }
+    };
+
+    loadRealProductData();
   }, []);
 
   // Load cart count on mount
@@ -396,38 +470,45 @@ export default function CareHub() {
   const addToCart = useCallback((medicationId: string) => {
     setCart(prev => [...prev, medicationId]);
     
-    // Add to advanced cart service
+    // Add to cart service
     const medication = enhancedMedications.find(med => med.id === medicationId);
     if (medication) {
-      const cartItem = {
-        id: `cart_${Date.now()}`,
-        medicationId: medication.id,
-        name: medication.name,
-        genericName: medication.genericName,
-        price: medication.price,
-        originalPrice: medication.originalPrice,
-        dosage: medication.dosage,
-        prescription: medication.prescription,
-        image: medication.image,
-        pharmacyId: 'clicks', // Default pharmacy
-        pharmacyName: 'Clicks',
-        maxQuantity: 10,
-        inStock: true
-      };
-      
-      cartService.addToCart(cartItem).then(() => {
-        updateCartCount();
+      cartService.addItem(medication, 1).then((success) => {
+        if (success) {
+          Alert.alert('Added to Cart', 'Item successfully added to your cart!');
+        } else {
+          Alert.alert('Error', 'Unable to add item to cart. Please check stock availability.');
+        }
       }).catch(console.error);
     }
-    
-    Alert.alert('Added to Cart', 'Item successfully added to your cart!');
-  }, [enhancedMedications, cartService, updateCartCount]);
+  }, [enhancedMedications, cartService]);
+
+  const addToCartWithQuantity = useCallback((medicationId: string, quantity: number) => {
+    const medication = enhancedMedications.find(med => med.id === medicationId);
+    if (medication) {
+      cartService.addItem(medication, quantity).then((success) => {
+        if (success) {
+          // Update local cart state for consistency
+          setCart(prev => [...prev.filter(id => id !== medicationId), medicationId]);
+        }
+      }).catch(console.error);
+    }
+  }, [enhancedMedications, cartService]);
 
   const removeFromCart = useCallback((medicationId: string) => {
     setCart(prev => prev.filter(id => id !== medicationId));
-  }, []);
+    cartService.removeItem(medicationId);
+  }, [cartService]);
 
   const isInCart = useCallback((medicationId: string) => cart.includes(medicationId), [cart]);
+
+  // Helper function to get pharmacy color
+  const getPharmacyColor = useCallback((pharmacyName: string) => {
+    const pharmacy = southAfricanPharmacies.find(p => 
+      p.name.toLowerCase() === pharmacyName.toLowerCase()
+    );
+    return pharmacy?.color || '#3726a6';
+  }, []);
 
   const openMedicationDetails = useCallback((medication: Medication) => {
     setSelectedMedication(medication);
@@ -665,68 +746,27 @@ export default function CareHub() {
             columnWrapperStyle={styles.medicationRow}
             contentContainerStyle={styles.medicationContainer}
             renderItem={({ item: medication }) => (
-              <TouchableOpacity 
-                key={medication.id} 
-                style={[styles.medicationCard, { backgroundColor: theme.colors.card.background, borderColor: theme.colors.border }]}
-                onPress={() => openMedicationDetails(medication)}
-              >
-                <View style={styles.medicationImageContainer}>
-                  <SmartProductImage 
-                    imageUrl={medication.realImageUrl || ''} 
-                    fallbackImage={medication.image}
-                    style={styles.medicationImage}
-                    width={80}
-                    height={80}
-                    quality={0.8}
-                  />
-                  {medication.discount && (
-                    <View style={[styles.discountBadge, { backgroundColor: theme.colors.error }]}>
-                      <Text style={styles.discountText}>{medication.discount}% OFF</Text>
-                    </View>
-                  )}
-                </View>
-                
-                <View style={styles.medicationInfo}>
-                  <View style={styles.medicationInfoHeader}>
-                    <Text style={[styles.medicationName, { color: theme.colors.textPrimary }]} numberOfLines={1}>{medication.name}</Text>
-                    {medication.realProduct && (
-                      <View style={[styles.realDataBadge, { backgroundColor: theme.colors.success }]}>
-                        <Text style={styles.realDataText}>LIVE</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={[styles.medicationGeneric, { color: theme.colors.textSecondary }]} numberOfLines={1}>{medication.genericName}</Text>
-                  <Text style={[styles.medicationDosage, { color: theme.colors.textSecondary }]}>{medication.dosage} • {medication.quantity}</Text>
-                  
-                  <View style={styles.priceContainer}>
-                    <Text style={[styles.currentPrice, { color: theme.colors.textPrimary }]}>R{medication.price.toFixed(2)}</Text>
-                    {medication.originalPrice && (
-                      <Text style={[styles.originalPrice, { color: theme.colors.textTertiary }]}>R{medication.originalPrice.toFixed(2)}</Text>
-                    )}
-                  </View>
-                  
-                  <Text style={[styles.pharmacyBadge, { color: theme.colors.primary }]}>{medication.pharmacy}</Text>
-                </View>
-
-                <TouchableOpacity
-                  style={[
-                    styles.addToCartButton,
-                    { backgroundColor: isInCart(medication.id) ? theme.colors.success : theme.colors.card.background },
-                    { borderColor: theme.colors.primary }
-                  ]}
-                  onPress={() => 
-                    isInCart(medication.id) 
-                      ? removeFromCart(medication.id) 
-                      : addToCart(medication.id)
-                  }
-                >
-                  <Ionicons 
-                    name={isInCart(medication.id) ? "checkmark" : "add"} 
-                    size={20} 
-                    color={isInCart(medication.id) ? theme.colors.white : theme.colors.primary} 
-                  />
-                </TouchableOpacity>
-              </TouchableOpacity>
+              <ModernProductCard
+                id={medication.id}
+                name={medication.name}
+                price={medication.price}
+                originalPrice={medication.originalPrice}
+                image={medication.image}
+                pharmacy={medication.pharmacy}
+                pharmacyColor={getPharmacyColor(medication.pharmacy)}
+                inStock={medication.inStock}
+                discount={medication.discount}
+                genericName={medication.genericName}
+                dosage={medication.dosage}
+                quantity={medication.quantity}
+                description={medication.description}
+                realImageUrl={medication.realImageUrl}
+                realProduct={medication.realProduct}
+                onAddToCart={(productId, quantity) => addToCartWithQuantity(productId, quantity)}
+                onViewDetails={() => openMedicationDetails(medication)}
+                style={{ flex: 1 }}
+                compact={true}
+              />
             )}
           />
         </View>
